@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscriptions — Zone</title>
+  <meta name="description" content="The quiet monthly cost of everything you signed up for. A D1-backed subscription tracker, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/subscriptions.css">
+</head>
+<body data-page="subscriptions">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main sb-page" id="main">
+        <header class="page-head sb-hero">
+          <div class="sb-hero-copy">
+            <p class="eyebrow">Library / Subscriptions</p>
+            <h1 class="page-title sb-title">The quiet cost of <em>signing up.</em></h1>
+            <p class="page-sub sb-sub">A yearly plan is a monthly plan wearing a coat. Everything here is normalised to one honest number, so you can see what the subscriptions actually add up to.</p>
+            <div class="sb-hero-actions">
+              <button type="button" class="btn btn-primary sb-primary" id="add-sub">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add subscription
+              </button>
+              <a class="btn sb-secondary" href="#sub-upcoming">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                See what’s next
+              </a>
+            </div>
+            <p class="sb-hero-meta" id="sub-hero-meta"></p>
+          </div>
+
+          <aside class="sb-burn" aria-labelledby="sb-burn-title">
+            <span class="sb-burn-stamp" aria-hidden="true">12×</span>
+            <div class="sb-burn-head">
+              <span id="sb-burn-title">Normalised burn</span>
+              <span id="sub-hero-active">—</span>
+            </div>
+            <strong class="sb-burn-total" id="burn-total">—<span> / month</span></strong>
+            <p class="sb-burn-note" id="burn-note"></p>
+
+            <div class="sb-burn-annual">
+              <span>If nothing changes</span>
+              <strong id="sub-hero-annual">—</strong>
+              <small>a year, normalised</small>
+            </div>
+
+            <div class="sb-cycle" id="sub-hero-cycle"></div>
+
+            <div class="sb-burn-next">
+              <div>
+                <span>Next on the calendar</span>
+                <strong id="sub-hero-next">—</strong>
+              </div>
+              <small id="sub-hero-next-meta">—</small>
+            </div>
+          </aside>
+        </header>
+
+        <section class="sb-stats" id="sub-stats" aria-label="Subscription summary"></section>
+
+        <div class="sb-layout">
+          <section class="panel sb-library" aria-labelledby="sub-library-title">
+            <header class="sb-library-head">
+              <div>
+                <p class="sb-kicker">Card catalogue</p>
+                <h2 id="sub-library-title">The shelf.</h2>
+              </div>
+              <span class="sb-library-meta" id="sub-panel-meta">—</span>
+            </header>
+
+            <div class="sb-toolbar">
+              <div class="sb-toolbar-main">
+                <label class="sb-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <span class="sr-only">Search subscriptions</span>
+                  <input type="search" id="sub-search" placeholder="Search the shelf…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+                  <button type="button" class="sb-search-clear" id="sub-search-clear" aria-label="Clear search" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                  <kbd aria-hidden="true">/</kbd>
+                </label>
+                <label class="sb-select-wrap">
+                  <span class="sr-only">Filter by status</span>
+                  <select class="select sb-select" id="sub-status">
+                    <option value="all">All statuses</option>
+                    <option value="active">Active only</option>
+                    <option value="paused">Paused only</option>
+                  </select>
+                </label>
+                <label class="sb-select-wrap">
+                  <span class="sr-only">Filter by category</span>
+                  <select class="select sb-select" id="sub-category-filter">
+                    <option value="all">All categories</option>
+                  </select>
+                </label>
+                <label class="sb-select-wrap">
+                  <span class="sr-only">Sort subscriptions</span>
+                  <select class="select sb-select sb-sort" id="sub-sort">
+                    <option value="next">Next charge</option>
+                    <option value="monthly">Monthly cost</option>
+                    <option value="name">Name A–Z</option>
+                  </select>
+                </label>
+              </div>
+              <span class="sb-count" id="sub-count">—</span>
+            </div>
+
+            <div class="sb-shelf" id="sub-body" aria-live="polite"></div>
+
+            <footer class="sb-library-foot">
+              <span>Paused plans stay on the shelf, but not in the burn.</span>
+              <span>Every amount normalised to one month</span>
+            </footer>
+          </section>
+
+          <aside class="sb-rail" aria-label="Subscription insights">
+            <section class="panel sb-upcoming" id="sub-upcoming" aria-labelledby="sub-upcoming-title">
+              <header class="sb-rail-head">
+                <div>
+                  <p class="sb-kicker">The calendar</p>
+                  <h2 id="sub-upcoming-title">Next up.</h2>
+                </div>
+                <span class="sb-rail-meta" id="sub-renewal-meta">—</span>
+              </header>
+              <div class="sb-renewal-list" id="renewal-list"></div>
+              <div class="sb-due-summary" id="due-summary"></div>
+            </section>
+
+            <section class="panel sb-mix-panel" aria-labelledby="sub-mix-title">
+              <header class="sb-rail-head">
+                <div>
+                  <p class="sb-kicker">The split</p>
+                  <h2 id="sub-mix-title">Where it goes.</h2>
+                </div>
+                <span class="sb-rail-meta">per month</span>
+              </header>
+              <div class="sb-mix" id="sub-mix"></div>
+              <p class="sb-mix-note">Active plans only. Shared equally across each category’s monthly share.</p>
+            </section>
+          </aside>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog sb-dialog" id="sub-dialog">
+    <form method="dialog" id="sub-form" novalidate>
+      <input type="hidden" id="sub-id">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="sub-kicker">Another monthly line</p>
+          <h2 class="dialog-title" id="sub-title">Add a subscription</h2>
+        </div>
+        <button type="button" class="dialog-close" data-close-sub aria-label="Close">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="sub-name">Service</label>
+          <input class="input" type="text" id="sub-name" maxlength="60" placeholder="Figma, Spotify, the newspaper…" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="sub-amount">Amount per charge</label>
+            <div class="input-group">
+              <span class="prefix" id="sub-currency">₹</span>
+              <input class="input" type="number" id="sub-amount" min="0" step="0.01" inputmode="decimal" placeholder="0" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="sub-cycle">Billing cycle</label>
+            <select class="select" id="sub-cycle">
+              <option>Monthly</option>
+              <option>Yearly</option>
+              <option>Weekly</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="sub-next">Next charge</label>
+            <input class="input" type="date" id="sub-next" required>
+          </div>
+          <div class="field">
+            <label for="sub-category">Category</label>
+            <select class="select" id="sub-category"></select>
+          </div>
+        </div>
+        <div class="sb-preview">
+          <div>
+            <span>Monthly share</span>
+            <strong id="sub-preview">—</strong>
+          </div>
+          <p>Yearly plans are divided by twelve. Weekly plans are multiplied by fifty-two, then divided by twelve.</p>
+        </div>
+        <div class="field">
+          <label for="sub-state">Status</label>
+          <select class="select" id="sub-state">
+            <option>Active</option>
+            <option>Paused</option>
+          </select>
+          <p class="field-hint">Paused plans stay in the list but are left out of the monthly burn.</p>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-sub>Cancel</button>
+        <button type="submit" class="btn btn-primary sb-primary" id="sub-save">Add subscription</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/subscriptions.js"></script>
+</body>
+</html>

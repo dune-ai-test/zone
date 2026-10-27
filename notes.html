@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notes — Zone</title>
+  <meta name="description" content="A commonplace book for the almost-thought. Private notes, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/notes.css">
+</head>
+<body data-page="notes">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main nt-page" id="main">
+        <header class="page-head nt-hero">
+          <div class="nt-hero-copy">
+            <p class="eyebrow">Personal / Notes</p>
+            <h1 class="page-title nt-title"><span>A commonplace for</span><em>the almost-thought.</em></h1>
+            <p class="page-sub nt-sub">Half-formed plans, quotations, the things you would otherwise text yourself. Keep the useful part. Leave the rest unfinished.</p>
+            <div class="nt-hero-actions">
+              <button type="button" class="btn btn-primary nt-primary" id="add-note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                New note
+              </button>
+              <button type="button" class="btn nt-export" id="export-notes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export notebook
+              </button>
+            </div>
+            <p class="nt-hero-meta" id="note-hero-meta"></p>
+          </div>
+          <aside class="nt-feature" aria-labelledby="note-feature-label">
+            <span class="nt-feature-tab" id="note-feature-label">Latest leaf</span>
+            <span class="nt-feature-clip" aria-hidden="true"></span>
+            <div class="nt-feature-body" id="note-feature-body"></div>
+          </aside>
+        </header>
+
+        <section class="nt-stats" id="note-stats" aria-label="Notebook statistics"></section>
+
+        <div class="nt-layout">
+          <section class="nt-notebook" aria-labelledby="note-notebook-title">
+            <header class="nt-notebook-head">
+              <div>
+                <p class="nt-kicker">The notebook</p>
+                <h2 id="note-notebook-title">Written down, kept close.</h2>
+              </div>
+              <span class="nt-count" id="note-count"></span>
+            </header>
+
+            <div class="nt-controls">
+              <label class="nt-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span class="sr-only">Search notes</span>
+                <input type="search" id="note-search" placeholder="Search titles and pages…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+                <button type="button" class="nt-search-clear" id="note-search-clear" aria-label="Clear search" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <kbd aria-hidden="true">/</kbd>
+              </label>
+              <label class="nt-select-wrap">
+                <span class="sr-only">Filter notes</span>
+                <select class="select nt-select" id="note-filter">
+                  <option value="all">All notes</option>
+                  <option value="pinned">Pinned only</option>
+                  <option value="week">This week</option>
+                </select>
+              </label>
+              <label class="nt-select-wrap">
+                <span class="sr-only">Sort notes</span>
+                <select class="select nt-select" id="note-sort">
+                  <option value="updated">Recently updated</option>
+                  <option value="created">Recently created</option>
+                  <option value="title">Title A–Z</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="nt-grid" id="notes-grid"></div>
+
+            <footer class="nt-notebook-foot">
+              <span>Notes stay in your workspace, quietly.</span>
+              <span><span class="nt-key">N</span> new note · <span class="nt-key">/</span> search</span>
+            </footer>
+          </section>
+
+          <aside class="nt-rail" aria-label="Notebook index">
+            <section class="nt-rail-panel">
+              <header class="nt-rail-head">
+                <div>
+                  <p class="nt-kicker">From the desk</p>
+                  <h2>Recently touched.</h2>
+                </div>
+                <span class="nt-rail-mark" aria-hidden="true">01</span>
+              </header>
+              <div class="nt-recent" id="note-recent"></div>
+            </section>
+
+            <section class="nt-rail-panel nt-prompt" id="note-prompt">
+              <div class="nt-prompt-mark" aria-hidden="true">&ldquo;</div>
+              <p class="nt-kicker">A prompt for today</p>
+              <h2 id="note-prompt-title">Notice one thing.</h2>
+              <p id="note-prompt-text">What did you see today that you would otherwise forget by tomorrow?</p>
+              <button type="button" class="nt-prompt-btn" data-use-prompt>
+                Begin from this prompt
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </button>
+            </section>
+
+            <section class="nt-rail-panel">
+              <header class="nt-rail-head">
+                <div>
+                  <p class="nt-kicker">The archive</p>
+                  <h2>A few quiet facts.</h2>
+                </div>
+                <span class="nt-rail-mark" aria-hidden="true">02</span>
+              </header>
+              <div class="nt-archive" id="note-archive"></div>
+            </section>
+
+            <section class="nt-paper-note">
+              <p>A note does not need to be finished. Put down the useful part and leave.</p>
+              <span>Field note · Zone</span>
+            </section>
+          </aside>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog nt-dialog" id="note-dialog">
+    <form method="dialog" id="note-form" novalidate>
+      <input type="hidden" id="note-id">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="note-kicker">A thought worth keeping</p>
+          <h2 class="dialog-title nt-dialog-title" id="note-title">New note</h2>
+        </div>
+        <button type="button" class="icon-btn small" data-close-note aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body nt-dialog-body">
+        <div class="nt-writing-meta">
+          <span>On paper</span>
+          <span class="nt-live-count" id="note-word-count">0 words</span>
+        </div>
+        <div class="field">
+          <label for="note-name">Title</label>
+          <input class="input nt-title-input" type="text" id="note-name" maxlength="90" placeholder="Books to find, principles, a recipe…" required>
+        </div>
+        <div class="field">
+          <label for="note-content">Note</label>
+          <textarea class="textarea nt-textarea" id="note-content" rows="11" placeholder="Write it down before it goes." required></textarea>
+        </div>
+        <div class="field">
+          <span class="field-label">Paper</span>
+          <div class="color-picker nt-colors" id="note-colors" role="group" aria-label="Note colour">
+            <button type="button" class="color-swatch nt-swatch active" data-note-color="plain" aria-label="Plain paper" aria-pressed="true"><i></i><span>Plain</span></button>
+            <button type="button" class="color-swatch nt-swatch" data-note-color="sand" aria-label="Sand paper" aria-pressed="false"><i></i><span>Sand</span></button>
+            <button type="button" class="color-swatch nt-swatch" data-note-color="sage" aria-label="Sage paper" aria-pressed="false"><i></i><span>Sage</span></button>
+            <button type="button" class="color-swatch nt-swatch" data-note-color="clay" aria-label="Clay paper" aria-pressed="false"><i></i><span>Clay</span></button>
+          </div>
+        </div>
+        <p class="nt-dialog-note">There are no folders here. Pin what matters; search finds the rest.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-note>Cancel</button>
+        <button type="submit" class="btn btn-primary nt-save" id="note-save">Save note</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog nt-view-dialog" id="note-view-dialog">
+    <div class="nt-view-shell">
+      <header class="nt-view-head">
+        <div>
+          <p class="nt-kicker" id="note-view-kicker">From the notebook</p>
+          <h2 class="nt-view-title" id="note-view-title">Note</h2>
+          <p class="nt-view-meta" id="note-view-meta"></p>
+        </div>
+        <button type="button" class="icon-btn small" data-close-note-view aria-label="Close note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div class="nt-view-body" id="note-view-body"></div>
+      <footer class="nt-view-foot">
+        <span><span id="note-view-words">0 words</span> · kept locally</span>
+        <div class="nt-view-actions">
+          <button type="button" class="btn btn-sm nt-view-pin" id="note-view-pin">Pin note</button>
+          <button type="button" class="btn btn-primary btn-sm" id="note-view-edit">Edit note</button>
+        </div>
+      </footer>
+    </div>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/notes.js"></script>
+</body>
+</html>

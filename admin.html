@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Zone</title>
+  <meta name="description" content="The Zone back office: review every workspace add, edit, and delete, restore the previous version, and manage the D1-backed workspace.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body data-page="admin">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main" id="main">
+        <header class="page-head admin-page-head">
+          <div>
+            <p class="eyebrow">System / Admin</p>
+            <h1 class="page-title">The back <em>office.</em></h1>
+            <p class="page-sub">Every workspace add, edit, and delete, with the version before it. New work goes live immediately; this desk keeps the receipt and can put the old version back.</p>
+          </div>
+          <div class="page-actions">
+            <a class="btn" href="index.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 3l9 8.5"/><path d="M5 10v10h14V10"/></svg>
+              Front desk
+            </a>
+            <button type="button" class="btn" id="admin-lock" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              Lock panel
+            </button>
+          </div>
+        </header>
+
+        <section class="admin-gate" id="admin-gate" aria-labelledby="admin-gate-title">
+          <div class="admin-gate-art">
+            <p class="eyebrow no-rule">Zone / restricted access</p>
+            <h2 class="admin-gate-display">Every change<br><em>has a receipt.</em></h2>
+            <p class="admin-gate-lede">The back office is the quiet half of Zone. Approve the changes you trust, restore the ones you do not, and keep a plain-language trail of every add, edit, and delete.</p>
+            <ul class="admin-gate-list">
+              <li><span>01</span>Review every workspace change</li>
+              <li><span>02</span>Restore the previous version</li>
+              <li><span>03</span>Keep the full activity trail</li>
+            </ul>
+            <div class="admin-gate-seal" aria-hidden="true">
+              <span class="admin-seal-ring"></span>
+              <span class="admin-seal-z">Z</span>
+              <span class="admin-seal-caption">Workspace operator<br>Desk no. 04</span>
+            </div>
+          </div>
+          <div class="admin-gate-form-wrap">
+            <form class="admin-gate-form" id="admin-login" novalidate>
+              <div class="admin-gate-form-top">
+                <span class="admin-lock-mark">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/></svg>
+                </span>
+                <span class="admin-gate-status"><span class="dot"></span>Panel locked</span>
+              </div>
+              <p class="eyebrow no-rule">Admin access</p>
+              <h3 id="admin-gate-title">Unlock the desk.</h3>
+              <p class="admin-gate-copy">Enter the admin password configured for this Cloudflare Pages project. The password is checked by a Pages Function and is never stored in this page.</p>
+              <label class="field-label" for="admin-code">Admin password</label>
+              <div class="admin-code-row">
+                <input class="input admin-code-input" id="admin-code" name="code" type="password" autocomplete="current-password" placeholder="Enter the admin password" aria-describedby="admin-code-hint admin-error">
+                <button type="submit" class="btn btn-primary">
+                  Enter admin
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+              <p class="admin-error" id="admin-error" role="alert" aria-live="polite"></p>
+              <div class="admin-code-hint" id="admin-code-hint">
+                <span>Secret name</span>
+                <code>ADMIN_PASSWORD</code>
+                <span class="admin-code-hint-note">Set in Cloudflare Pages</span>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <div class="admin-app" id="admin-app" hidden>
+          <section class="admin-control-strip" aria-label="Admin status">
+            <div class="admin-control-status">
+              <span class="admin-live"><span class="dot"></span>Operator session active</span>
+              <span class="admin-control-rule"></span>
+              <span>D1 workspace</span>
+              <span class="admin-control-sep">/</span>
+              <span>Admin protected</span>
+            </div>
+            <div class="admin-control-actions">
+              <span class="admin-sync" id="admin-sync">Synced with D1</span>
+              <button type="button" class="btn btn-sm" id="admin-refresh">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                Sync from D1
+              </button>
+            </div>
+          </section>
+
+          <div class="admin-stat-grid" id="admin-stats"></div>
+
+          <nav class="admin-tabs" aria-label="Admin sections">
+            <button type="button" class="admin-tab active" data-tab="overview" aria-pressed="true">Overview</button>
+            <button type="button" class="admin-tab" data-tab="submissions" aria-pressed="false">Records <span class="admin-tab-count" data-tab-count="submissions">0</span></button>
+            <button type="button" class="admin-tab" data-tab="activity" aria-pressed="false">Activity <span class="admin-tab-count" data-tab-count="activity">0</span></button>
+            <button type="button" class="admin-tab" data-tab="setup" aria-pressed="false">Setup</button>
+          </nav>
+
+          <section class="admin-panel" data-panel="overview" id="admin-panel-overview">
+            <div class="admin-overview-grid">
+              <section class="admin-card admin-queue-card" aria-labelledby="admin-queue-title">
+                <div class="admin-card-head">
+                  <div>
+                    <p class="eyebrow no-rule">Review queue</p>
+                    <h2 id="admin-queue-title">Waiting for a decision.</h2>
+                  </div>
+                  <span class="admin-count-chip" id="admin-queue-count">0 pending</span>
+                </div>
+                <div class="admin-queue" id="admin-queue"></div>
+              </section>
+
+              <div class="admin-side-stack">
+                <section class="admin-card" aria-labelledby="admin-breakdown-title">
+                  <div class="admin-card-head compact">
+                    <div>
+                      <p class="eyebrow no-rule">By tool</p>
+                      <h2 id="admin-breakdown-title">Where the desk is busy.</h2>
+                    </div>
+                  </div>
+                  <div class="admin-breakdown" id="admin-breakdown"></div>
+                </section>
+
+                <section class="admin-card admin-activity-mini" aria-labelledby="admin-activity-mini-title">
+                  <div class="admin-card-head compact">
+                    <div>
+                      <p class="eyebrow no-rule">Latest movement</p>
+                      <h2 id="admin-activity-mini-title">The paper trail.</h2>
+                    </div>
+                    <button type="button" class="text-link admin-jump" data-jump="activity">All activity <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button>
+                  </div>
+                  <div class="admin-activity-feed compact" id="admin-recent-activity"></div>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" data-panel="submissions" id="admin-panel-submissions" hidden>
+            <section class="admin-card admin-list-card">
+              <div class="admin-card-head">
+                <div>
+                  <p class="eyebrow no-rule">The register</p>
+                  <h2>Every record on the desk.</h2>
+                </div>
+                <span class="admin-count-chip quiet" id="admin-list-count">0 records</span>
+              </div>
+              <div class="admin-toolbar">
+                <label class="search-field admin-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input class="input" type="search" id="admin-search" placeholder="Search a record, tool, or person…" autocomplete="off">
+                </label>
+                <select class="select" id="admin-tool-filter" aria-label="Filter by tool">
+                  <option value="all">All tools</option>
+                </select>
+                <select class="select" id="admin-status-filter" aria-label="Filter by status">
+                  <option value="all">Any status</option>
+                  <option value="pending">Pending change</option>
+                  <option value="approved">Approved</option>
+                  <option value="active">Active</option>
+                  <option value="baseline">Baseline</option>
+                  <option value="restored">Restored</option>
+                </select>
+              </div>
+              <div class="admin-list" id="admin-list"></div>
+              <div class="admin-list-foot">
+                <span id="admin-empty-note">Use the filters to find a record.</span>
+                <button type="button" class="btn btn-sm" id="admin-load-more" hidden>Load more</button>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-panel" data-panel="activity" id="admin-panel-activity" hidden>
+            <section class="admin-card admin-list-card">
+              <div class="admin-card-head">
+                <div>
+                  <p class="eyebrow no-rule">Full activity</p>
+                  <h2>Every add, edit, and delete.</h2>
+                </div>
+                <button type="button" class="btn btn-sm" id="admin-clear-activity">Clear resolved</button>
+              </div>
+              <div class="admin-toolbar admin-audit-toolbar">
+                <label class="search-field admin-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input class="input" type="search" id="admin-activity-search" placeholder="Search activity, records, tools…" autocomplete="off">
+                </label>
+                <select class="select" id="admin-activity-tool-filter" aria-label="Filter activity by tool">
+                  <option value="all">All tools</option>
+                </select>
+                <select class="select" id="admin-activity-action-filter" aria-label="Filter activity by action">
+                  <option value="all">All actions</option>
+                  <option value="add">Added</option>
+                  <option value="edit">Edited</option>
+                  <option value="delete">Deleted</option>
+                  <option value="restore">Restored</option>
+                  <option value="import">Imported</option>
+                  <option value="system">System</option>
+                </select>
+                <select class="select" id="admin-activity-status-filter" aria-label="Filter activity by status">
+                  <option value="all">Any status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="rolledback">Rolled back</option>
+                </select>
+              </div>
+              <div class="admin-activity-feed admin-audit-feed" id="admin-activity"></div>
+              <div class="admin-list-foot">
+                <span id="admin-activity-note">The activity trail is empty for now.</span>
+                <button type="button" class="btn btn-sm" id="admin-activity-more" hidden>Load more</button>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-panel" data-panel="setup" id="admin-panel-setup" hidden>
+            <div class="admin-setup-grid">
+              <section class="admin-card">
+                <div class="admin-card-head compact">
+                  <div>
+                    <p class="eyebrow no-rule">Approval policy</p>
+                    <h2>How new work is handled.</h2>
+                  </div>
+                </div>
+                <div class="admin-setting-row">
+                  <div>
+                    <h3>Auto-approve workspace changes</h3>
+                    <p>New work always goes live immediately. When this is off, every add, edit, and delete waits in Activity for a decision; when it is on, the change arrives approved and the full trail remains.</p>
+                  </div>
+                  <label class="admin-switch">
+                    <input type="checkbox" id="admin-auto-approve">
+                    <span class="admin-switch-track"><span></span></span>
+                    <span class="sr-only">Auto-approve workspace changes</span>
+                  </label>
+                </div>
+                <div class="admin-policy-note" id="admin-policy-note">Manual review is on. Changes go live immediately and wait in Activity for a decision.</div>
+                <div class="admin-inline-actions">
+                  <button type="button" class="btn btn-sm" id="admin-approve-all">Approve everything pending</button>
+                  <button type="button" class="btn btn-sm" id="admin-export">Export admin report</button>
+                </div>
+              </section>
+
+              <section class="admin-card admin-data-card">
+                <div class="admin-card-head compact">
+                  <div>
+                    <p class="eyebrow no-rule">Data &amp; backups</p>
+                    <h2>The whole workspace.</h2>
+                  </div>
+                  <span class="admin-count-chip quiet">D1 backed</span>
+                </div>
+                <div class="admin-data-body">
+                  <div class="admin-data-intro">
+                    <p class="admin-data-copy">The workspace lives in Cloudflare D1 and is cached in this browser. Export a plain JSON copy before making sweeping changes or moving to another account. An import replaces only the sections contained in the file.</p>
+                    <div class="storage-summary" id="admin-storage-summary"></div>
+                  </div>
+                  <div class="admin-data-controls">
+                    <div class="data-actions">
+                      <button type="button" class="btn" id="admin-export-data">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                        Export backup
+                      </button>
+                      <button type="button" class="btn" id="admin-import-data">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+                        Import a backup
+                      </button>
+                    </div>
+                    <input type="file" id="admin-import-file" accept=".json,application/json" hidden>
+                    <p class="import-status" id="admin-import-status" role="status">No backup imported this session.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="admin-card">
+                <div class="admin-card-head compact">
+                  <div>
+                    <p class="eyebrow no-rule">Tool registry</p>
+                    <h2>The working parts.</h2>
+                  </div>
+                </div>
+                <div class="admin-tool-registry" id="admin-tools"></div>
+              </section>
+
+              <section class="admin-card admin-danger-card">
+                <div class="admin-card-head compact">
+                  <div>
+                    <p class="eyebrow no-rule">Workspace controls</p>
+                    <h2>Housekeeping.</h2>
+                  </div>
+                </div>
+                <div class="admin-setting-row">
+                  <div>
+                    <h3>Access note</h3>
+                    <p>The panel is protected by the ADMIN_PASSWORD secret in Cloudflare Pages. Sessions last 12 hours; lock the panel when you are finished.</p>
+                  </div>
+                  <button type="button" class="btn btn-sm" id="admin-lock-inline">Lock now</button>
+                </div>
+              </section>
+
+              <section class="admin-card admin-about-card">
+                <div class="admin-card-head compact">
+                  <div>
+                    <p class="eyebrow no-rule">How the review works</p>
+                    <h2>A small, legible system.</h2>
+                  </div>
+                </div>
+                <div class="admin-steps">
+                  <div><span>01</span><h3>Lands live</h3><p>An add, edit, or delete applies to the tool immediately, so the person at the front desk can keep working.</p></div>
+                  <div><span>02</span><h3>Waits in Activity</h3><p>Manual review files the before and after under Activity as pending. Nothing is hidden and nothing is silently lost.</p></div>
+                  <div><span>03</span><h3>Approve or restore</h3><p>Approve keeps the change. Reject or roll back writes the previous version back and leaves a dated restore entry.</p></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone admin — operator console</span>
+          <span><a href="index.html">Front desk</a> · <a href="settings.html">Settings</a> · v2.0</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/admin.js"></script>
+</body>
+</html>

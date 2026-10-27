@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habits — Zone</title>
+  <meta name="description" content="Small repetitions, made visible across the weeks. A D1-backed habit tracker, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/habits.css">
+</head>
+<body data-page="habits">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main hb-page" id="main">
+        <header class="page-head hb-hero">
+          <div class="hb-hero-copy">
+            <p class="eyebrow">Personal / Habits</p>
+            <h1 class="page-title hb-title"><span>Make it</span><em>a rhythm.</em></h1>
+            <p class="page-sub hb-sub">Small repetitions, kept where you can see them. A week is not a scoreboard — it is a shape you return to.</p>
+            <div class="hb-hero-actions">
+              <button type="button" class="btn btn-primary hb-primary" id="add-habit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add a habit
+              </button>
+              <button type="button" class="btn hb-export" id="export-habits">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export history
+              </button>
+            </div>
+            <p class="hb-hero-meta" id="habit-hero-meta"></p>
+          </div>
+          <aside class="hb-week-card" id="habit-week-card" aria-label="Today's rhythm"></aside>
+        </header>
+
+        <section class="hb-metrics" id="habit-stats" aria-label="Habit statistics"></section>
+
+        <div class="hb-layout">
+          <section class="hb-board" id="habit-board" aria-labelledby="habit-board-title">
+            <header class="hb-board-head">
+              <div>
+                <p class="hb-kicker">The weekly board</p>
+                <h2 id="habit-board-title">Seven days, one row at a time.</h2>
+              </div>
+              <div class="hb-week-nav" aria-label="Browse weeks">
+                <button type="button" class="hb-week-btn" id="habit-prev-week" aria-label="Previous week" title="Previous week">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <span class="hb-week-range" id="habit-week-label" aria-live="polite">—</span>
+                <button type="button" class="hb-week-btn" id="habit-next-week" aria-label="Next week" title="Next week">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+                <button type="button" class="hb-this-week" id="habit-this-week" hidden>This week</button>
+              </div>
+            </header>
+
+            <section class="hb-checkin" id="habit-checkin" aria-labelledby="habit-checkin-title">
+              <div class="hb-checkin-head">
+                <div>
+                  <p class="hb-kicker" id="habit-checkin-date">Today</p>
+                  <h3 id="habit-checkin-title">Today&rsquo;s check-in</h3>
+                </div>
+                <span class="hb-checkin-count" id="today-checkin-count">—</span>
+              </div>
+              <div class="hb-checkin-grid" id="today-strip"></div>
+            </section>
+
+            <div class="hb-tools">
+              <div class="hb-search">
+                <svg class="hb-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <label class="sr-only" for="habit-search">Search habits</label>
+                <input type="search" id="habit-search" placeholder="Find a habit…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+                <button type="button" class="hb-search-clear" id="habit-search-clear" aria-label="Clear search" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <span class="hb-search-key" aria-hidden="true">/</span>
+              </div>
+              <div class="hb-filters" id="habit-filters" role="group" aria-label="Filter habits"></div>
+              <label class="hb-sort">
+                <span class="sr-only">Sort habits</span>
+                <select class="select hb-select" id="habit-sort">
+                  <option value="custom">As entered</option>
+                  <option value="streak">Longest streak</option>
+                  <option value="name">Name</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="hb-table" id="habit-table"></div>
+
+            <footer class="hb-board-foot">
+              <div class="hb-legend">
+                <span><i class="hb-legend-dot is-done" aria-hidden="true"></i>Checked</span>
+                <span><i class="hb-legend-dot" aria-hidden="true"></i>Open</span>
+                <span><i class="hb-legend-dot is-today" aria-hidden="true"></i>Today</span>
+              </div>
+              <span>Future days are closed. Every other day can still change.</span>
+            </footer>
+          </section>
+
+          <aside class="hb-rail" aria-label="Habit trends">
+            <section class="hb-panel hb-pulse">
+              <header class="hb-panel-head">
+                <div>
+                  <p class="hb-kicker">Eight-week pulse</p>
+                  <h2>The longer view.</h2>
+                </div>
+                <span class="hb-pulse-meta" id="habit-pulse-meta">—</span>
+              </header>
+              <div class="hb-pulse-chart" id="habit-week-chart"></div>
+              <p class="hb-pulse-note">Select a bar to open that week in the board.</p>
+            </section>
+
+            <section class="hb-panel hb-insights">
+              <header class="hb-panel-head">
+                <div>
+                  <p class="hb-kicker">Signals, not scores</p>
+                  <h2>In the garden.</h2>
+                </div>
+              </header>
+              <div class="hb-insight-list" id="habit-insights"></div>
+            </section>
+
+            <section class="hb-panel hb-guide">
+              <p class="hb-kicker">Field notes</p>
+              <h2>How the rhythm works.</h2>
+              <ol class="hb-guide-list">
+                <li><span>01</span><p>A target is a direction, not a debt. Extra days still count.</p></li>
+                <li><span>02</span><p>A blank day is information. Begin again without ceremony.</p></li>
+                <li><span>03</span><p>Look for the pattern across weeks, not the perfect month.</p></li>
+              </ol>
+            </section>
+          </aside>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog hb-dialog" id="habit-dialog">
+    <form method="dialog" class="hb-dialog-form" id="habit-form" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="hb-kicker" id="habit-kicker">New habit</p>
+          <h2 class="dialog-title" id="habit-title">Choose a small repetition.</h2>
+        </div>
+        <button type="button" class="icon-btn small" data-habit-close aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body hb-dialog-body">
+        <input type="hidden" id="habit-id">
+        <div class="hb-starters-field" id="habit-starters-field">
+          <div class="hb-starter-label"><span>Start with</span><span>One small thing</span></div>
+          <div class="hb-starters" id="habit-starters">
+            <button type="button" data-habit-starter="Morning walk" data-target="7">Morning walk</button>
+            <button type="button" data-habit-starter="Read 20 pages" data-target="6">Read 20 pages</button>
+            <button type="button" data-habit-starter="Strength training" data-target="3">Strength training</button>
+            <button type="button" data-habit-starter="Evening journal" data-target="7">Evening journal</button>
+            <button type="button" data-habit-starter="Stretch" data-target="4">Stretch</button>
+            <button type="button" data-habit-starter="No screens after 11" data-target="5">No screens after 11</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="habit-name">Habit</label>
+          <input class="input" type="text" id="habit-name" maxlength="60" placeholder="e.g. Morning walk" required>
+        </div>
+        <div class="field">
+          <label for="habit-target">Target</label>
+          <select class="select" id="habit-target">
+            <option value="1">Once a week</option>
+            <option value="2">Twice a week</option>
+            <option value="3">Three days a week</option>
+            <option value="4">Four days a week</option>
+            <option value="5">Five days a week</option>
+            <option value="6">Six days a week</option>
+            <option value="7" selected>Every day</option>
+          </select>
+          <p class="field-hint" id="habit-target-note">A check-in for every day of the week.</p>
+        </div>
+        <p class="hb-dialog-note">A habit appears as a row in every week, past and present. Its history begins today.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn btn-ghost" data-habit-close>Cancel</button>
+        <button type="submit" class="btn btn-primary hb-save" id="habit-save">Add habit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/habits.js"></script>
+</body>
+</html>

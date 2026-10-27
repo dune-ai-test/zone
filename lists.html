@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lists — Zone</title>
+  <meta name="description" content="Nested checklists for things that arrive in steps. A D1-backed list maker, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/lists.css">
+</head>
+<body data-page="lists">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main ls-page" id="main">
+        <header class="page-head ls-hero">
+          <div class="ls-hero-copy">
+            <p class="eyebrow">Personal / Lists</p>
+            <h1 class="page-title ls-title"><span>Small steps,</span><em>kept in order.</em></h1>
+            <p class="page-sub ls-sub">A grocery run is one line. Packing for a trip is twelve. Keep the small pieces under the thing they belong to, then watch the page clear.</p>
+            <div class="ls-hero-actions">
+              <button type="button" class="btn btn-primary" id="new-list" data-open-new-list>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                New list
+              </button>
+              <button type="button" class="btn ls-export" id="export-lists">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export all
+              </button>
+            </div>
+            <p class="ls-hero-meta" id="lists-hero-meta"></p>
+          </div>
+          <aside class="ls-focus" id="lists-focus" aria-label="Current list"></aside>
+        </header>
+
+        <section class="ls-metrics" id="list-stats" aria-label="List totals"></section>
+
+        <div class="ls-layout">
+          <aside class="ls-rail" aria-label="List index">
+            <section class="ls-index">
+              <div class="ls-index-head">
+                <div>
+                  <p class="ls-index-kicker">Index</p>
+                  <h2 class="ls-index-title">Your lists</h2>
+                </div>
+                <span class="ls-index-count" id="list-count">—</span>
+              </div>
+
+              <div class="ls-index-tools">
+                <div class="ls-search">
+                  <svg class="ls-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <label class="sr-only" for="list-search">Search lists and items</label>
+                  <input type="search" id="list-search" placeholder="Search lists and items…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/" aria-controls="list-index">
+                  <button type="button" class="ls-search-clear" id="list-search-clear" aria-label="Clear search" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                </div>
+
+                <div class="ls-list-tabs" id="list-filters" role="group" aria-label="Filter lists">
+                  <button type="button" class="ls-list-tab is-active" data-list-filter="all" aria-pressed="true">All <span data-list-filter-count="all">0</span></button>
+                  <button type="button" class="ls-list-tab" data-list-filter="open" aria-pressed="false">Open <span data-list-filter-count="open">0</span></button>
+                  <button type="button" class="ls-list-tab" data-list-filter="done" aria-pressed="false">Clear <span data-list-filter-count="done">0</span></button>
+                </div>
+              </div>
+
+              <div class="ls-index-body" id="list-index"></div>
+
+              <div class="ls-index-foot">
+                <span class="ls-index-note"><span class="ls-local-dot" aria-hidden="true"></span>Local index</span>
+                <button type="button" class="ls-text-btn" id="new-list-side" data-open-new-list>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  New list
+                </button>
+              </div>
+            </section>
+
+            <section class="ls-guide">
+              <p class="ls-guide-kicker">Field notes</p>
+              <h2>How a list behaves</h2>
+              <ol>
+                <li>
+                  <span>01</span>
+                  <div><strong>A line is the thing.</strong><p>Steps live beneath it, so the small pieces never float away from their parent.</p></div>
+                </li>
+                <li>
+                  <span>02</span>
+                  <div><strong>The last step closes the line.</strong><p>Tick every step and the parent follows. Tick the parent and the whole line is crossed at once.</p></div>
+                </li>
+                <li>
+                  <span>03</span>
+                  <div><strong>Move the important things up.</strong><p>Use the arrows on a line to put the next thing at the top of the page.</p></div>
+                </li>
+              </ol>
+              <p class="ls-guide-foot">A local notebook. Nothing is shared outside your workspace.</p>
+            </section>
+          </aside>
+
+          <div class="ls-detail" id="list-detail"></div>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog" id="list-dialog" aria-labelledby="list-dialog-title">
+    <form method="dialog" id="list-form" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="list-dialog-kicker">A new page</p>
+          <h2 class="dialog-title" id="list-dialog-title">Start a list</h2>
+        </div>
+        <button type="button" class="dialog-close" data-close-list aria-label="Close">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="list-title" id="list-title-label">List name</label>
+          <input class="input" type="text" id="list-title" maxlength="80" placeholder="Weekend reset, launch checklist…" required>
+          <p class="field-hint" id="list-title-hint">You can add the individual steps next.</p>
+        </div>
+        <div class="field" id="list-template-field">
+          <div class="ls-template-label-row">
+            <span class="ls-template-label">Start from</span>
+            <span class="ls-template-meta" id="list-template-meta">Blank page</span>
+          </div>
+          <div class="ls-template-grid" id="list-template-grid" role="group" aria-label="Starter templates"></div>
+          <p class="field-hint" id="list-template-hint">Choose a starter or begin with a clean sheet.</p>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-list>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="list-save">Create list</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/lists.js"></script>
+</body>
+</html>

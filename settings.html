@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Zone</title>
+  <meta name="description" content="Appearance and currency for the D1-backed Zone desk.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+</head>
+<body data-page="settings">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main" id="main">
+        <header class="page-head">
+          <div>
+            <p class="eyebrow">System / Settings</p>
+            <h1 class="page-title">The desk, <em>as you like it.</em></h1>
+            <p class="page-sub">How Zone looks and what currency it counts in. Backups and workspace controls now live in the Admin console. There is no account. The data lives in your Cloudflare D1 workspace.</p>
+          </div>
+        </header>
+
+        <div class="settings-stack">
+          <section class="panel settings-panel" id="appearance-panel">
+            <div class="panel-head">
+              <h2 class="panel-title"><span class="settings-num">01</span>Appearance</h2>
+              <span class="panel-meta">theme</span>
+            </div>
+            <div class="panel-body">
+              <p class="settings-description">Warm paper, or the same desk after dark. System follows whatever this device is set to and changes with it.</p>
+              <div class="theme-options" id="theme-options" role="group" aria-label="Theme">
+                <button type="button" class="theme-option" data-theme-choice="light" aria-pressed="false">
+                  <span class="theme-preview light"><i></i><i></i></span>
+                  <span class="theme-option-bottom"><span class="theme-option-name">Light</span><span class="theme-option-radio"></span></span>
+                </button>
+                <button type="button" class="theme-option" data-theme-choice="dark" aria-pressed="false">
+                  <span class="theme-preview dark"><i></i><i></i></span>
+                  <span class="theme-option-bottom"><span class="theme-option-name">Dark</span><span class="theme-option-radio"></span></span>
+                </button>
+                <button type="button" class="theme-option" data-theme-choice="system" aria-pressed="false">
+                  <span class="theme-preview system"><i></i><i></i></span>
+                  <span class="theme-option-bottom"><span class="theme-option-name">System</span><span class="theme-option-radio"></span></span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel settings-panel" id="currency-panel">
+            <div class="panel-head">
+              <h2 class="panel-title"><span class="settings-num">02</span>Money &amp; currency</h2>
+              <span class="panel-meta">display only</span>
+            </div>
+            <div class="panel-body">
+              <p class="settings-description">Zone does not convert amounts. It only changes the symbol and formatting used when an amount is displayed, so your numbers stay exactly as entered.</p>
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>Display currency</h4>
+                  <p>Applies across the money tracker, passbook, mileage, split groups, and subscriptions.</p>
+                </div>
+                <select class="select" id="currency-select" aria-label="Display currency">
+                  <option value="INR">INR — Indian rupee (₹)</option>
+                  <option value="USD">USD — US dollar ($)</option>
+                  <option value="EUR">EUR — Euro (€)</option>
+                  <option value="GBP">GBP — Pound sterling (£)</option>
+                  <option value="AED">AED — UAE dirham (د.إ)</option>
+                  <option value="AUD">AUD — Australian dollar ($)</option>
+                  <option value="CAD">CAD — Canadian dollar ($)</option>
+                  <option value="SGD">SGD — Singapore dollar ($)</option>
+                </select>
+              </div>
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <h4>How it reads</h4>
+                  <p>A sample of the active formatting.</p>
+                </div>
+                <strong class="settings-value" id="currency-sample">—</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel settings-panel" id="about-panel">
+            <div class="panel-head">
+              <h2 class="panel-title"><span class="settings-num">03</span>About Zone</h2>
+              <span class="panel-meta">v2.0</span>
+            </div>
+            <div class="panel-body">
+              <div class="about-mark" id="about-mark">
+                <div>
+                  <h3>Zone</h3>
+                  <p>Personal utilities · D1-backed</p>
+                </div>
+              </div>
+              <p class="about-copy">A set of small, ordinary tools for keeping track of a life: what you spent, what you meant to do, what you watched, what you wrote down. It runs in the browser and stores its records in your own Cloudflare D1 database — no account, no third-party trackers.</p>
+              <p class="about-copy">There is no sync and no analytics. If the browser's site data is cleared, the workspace goes with it — the export in Admin is the honest backup.</p>
+              <div class="kv-grid" id="about-facts"></div>
+              <div class="about-links">
+                <a href="index.html">All tools</a>
+                <a href="admin.html">Admin &amp; backups</a>
+                <a href="settings.html#appearance-panel">Appearance</a>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="index.html">Overview</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/settings.js"></script>
+</body>
+</html>

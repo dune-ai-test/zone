@@ -1,0 +1,16 @@
+# Local secrets and Wrangler state
+.dev.vars
+.env
+.env.*
+.wrangler/
+node_modules/
+
+# Local test output
+zone-bill-*.png
+test-results/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

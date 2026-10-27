@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watchlist — Zone</title>
+  <meta name="description" content="What to watch, what you're watching, and what was worth it. Part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/watchlist.css">
+</head>
+<body data-page="watchlist">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main" id="main">
+        <header class="page-head wl-hero">
+          <div class="wl-hero-copy">
+            <p class="eyebrow">Library / Watchlist</p>
+            <h1 class="page-title wl-title"><span class="wl-title-line">The shelf,</span> <em>not the algorithm.</em></h1>
+            <p class="page-sub wl-lede">A deliberate queue for the things worth an evening. No recommendations, no autoplay — just what you meant to watch.</p>
+            <div class="wl-hero-actions">
+              <button type="button" class="btn btn-primary" id="add-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add a title
+              </button>
+              <button type="button" class="btn wl-export" id="export-shelf">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export shelf
+              </button>
+            </div>
+            <p class="wl-hero-meta" id="watch-hero-meta"></p>
+          </div>
+          <div class="wl-hero-pick">
+            <div id="watch-tonight"></div>
+            <p class="sr-only" id="watch-pick-status" aria-live="polite"></p>
+          </div>
+        </header>
+
+        <section class="wl-stats" id="watch-stats" aria-label="Watchlist summary"></section>
+
+        <section class="wl-section wl-now-section" aria-labelledby="wl-now-title">
+          <div class="wl-section-head">
+            <div>
+              <h2 class="wl-section-title" id="wl-now-title">In rotation</h2>
+              <p class="wl-section-sub">The things already on the go.</p>
+            </div>
+            <span class="wl-section-meta" id="watch-now-meta">—</span>
+          </div>
+          <div class="wl-now-grid" id="watch-now-list"></div>
+        </section>
+
+        <section class="wl-section wl-shelf-section" id="watch-shelf" aria-labelledby="wl-shelf-title">
+          <div class="wl-section-head">
+            <div>
+              <h2 class="wl-section-title" id="wl-shelf-title">The shelf</h2>
+              <p class="wl-section-sub">A real shelf for everything waiting, finished, or set aside.</p>
+            </div>
+            <span class="wl-section-meta" id="watch-count" aria-live="polite" aria-atomic="true">—</span>
+          </div>
+
+          <div class="wl-shelf-bar">
+            <div class="wl-status-tabs" id="watch-filters" role="group" aria-label="Filter by status">
+              <button type="button" class="wl-tab is-active" data-status="All" aria-pressed="true">All <span data-status-count="All">0</span></button>
+              <button type="button" class="wl-tab" data-status="Queued" aria-pressed="false">Queued <span data-status-count="Queued">0</span></button>
+              <button type="button" class="wl-tab" data-status="Watching" aria-pressed="false">Watching <span data-status-count="Watching">0</span></button>
+              <button type="button" class="wl-tab" data-status="Watched" aria-pressed="false">Watched <span data-status-count="Watched">0</span></button>
+              <button type="button" class="wl-tab" data-status="Dropped" aria-pressed="false">Dropped <span data-status-count="Dropped">0</span></button>
+            </div>
+            <div class="wl-shelf-tools">
+              <label class="wl-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="search" id="watch-search" placeholder="Search the shelf" aria-label="Search watchlist">
+              </label>
+              <select class="select wl-select" id="watch-sort" aria-label="Sort watchlist">
+                <option value="added">Recently added</option>
+                <option value="title">Title A–Z</option>
+                <option value="year">Year, newest</option>
+                <option value="rating">Rating, highest</option>
+              </select>
+              <button type="button" class="wl-reset" id="watch-reset" hidden>Clear filters</button>
+            </div>
+          </div>
+
+          <div class="wl-filter-row">
+            <div class="wl-type-tabs" id="watch-types" role="group" aria-label="Filter by type">
+              <button type="button" class="wl-type is-active" data-type="All" aria-pressed="true">All <span data-type-count="All">0</span></button>
+              <button type="button" class="wl-type" data-type="Film" aria-pressed="false">Films <span data-type-count="Film">0</span></button>
+              <button type="button" class="wl-type" data-type="Series" aria-pressed="false">Series <span data-type-count="Series">0</span></button>
+            </div>
+            <button type="button" class="wl-type wl-fav-filter" id="watch-favorites" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>
+              Favorites <span data-fav-count>0</span>
+            </button>
+            <div class="wl-genre-wrap" id="watch-genre-wrap">
+              <span class="wl-filter-label">Genre</span>
+              <div class="wl-genres" id="watch-genres" role="group" aria-label="Filter by genre"></div>
+            </div>
+          </div>
+
+          <div class="wl-shelf-layout" id="watch-shelf-layout">
+            <div class="wl-cabinet" id="watch-list"></div>
+            <aside class="wl-notes" id="watch-aside" aria-label="Shelf notes"></aside>
+          </div>
+        </section>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog wl-detail-dialog" id="watch-detail-dialog" aria-labelledby="watch-detail-title">
+    <div class="wl-detail-shell" id="watch-detail-shell"></div>
+  </dialog>
+
+  <dialog class="dialog wl-dialog" id="watch-dialog" aria-labelledby="watch-dialog-title">
+    <form method="dialog" id="watch-form" novalidate>
+      <input type="hidden" id="watch-id">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="watch-dialog-kicker">Add to the shelf</p>
+          <h2 class="dialog-title" id="watch-dialog-title">A new arrival</h2>
+        </div>
+        <button type="button" class="dialog-close" data-close-dialog aria-label="Close">✕</button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="watch-title">Title</label>
+          <input class="input" type="text" id="watch-title" placeholder="Film or series name" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="watch-type">Type</label>
+            <select class="select" id="watch-type">
+              <option value="Film">Film</option>
+              <option value="Series">Series</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="watch-year">Year</label>
+            <input class="input" type="number" id="watch-year" min="1900" max="2100" placeholder="2024">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="watch-genre">Genre</label>
+            <input class="input" type="text" id="watch-genre" placeholder="Drama, sci-fi, documentary…">
+          </div>
+          <div class="field">
+            <label for="watch-status">Status</label>
+            <select class="select" id="watch-status">
+              <option value="Queued">Queued</option>
+              <option value="Watching">Watching</option>
+              <option value="Watched">Watched</option>
+              <option value="Dropped">Dropped</option>
+            </select>
+          </div>
+        </div>
+        <div class="wl-season-editor" id="watch-series-fields" hidden>
+          <div class="wl-season-editor-head">
+            <div>
+              <span class="wl-season-editor-title">Seasons &amp; episodes</span>
+              <p class="wl-season-copy">One row per season. Progress becomes S01E01, S02E05, and so on. An older flat count starts as Season 1.</p>
+            </div>
+            <button type="button" class="wl-season-add" id="watch-add-season">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Add season
+            </button>
+          </div>
+          <div class="wl-season-list" id="watch-season-list" role="group" aria-label="Seasons"></div>
+          <p class="wl-season-empty" id="watch-season-empty" hidden>No seasons yet. Add one to set an episode count.</p>
+          <div class="wl-season-summary" id="watch-season-summary" hidden></div>
+        </div>
+
+        <div class="wl-form-progress" id="watch-dialog-progress" hidden>
+          <div class="wl-form-progress-head">
+            <span>Series progress</span>
+            <strong id="watch-progress-label">No episode count yet</strong>
+          </div>
+          <div class="wl-form-progress-track" aria-hidden="true"><span id="watch-progress-bar"></span></div>
+        </div>
+
+        <div class="field">
+          <label for="watch-service">Where to watch</label>
+          <input class="input" type="text" id="watch-service" list="watch-service-options" placeholder="Netflix, MUBI, the cinema…" autocomplete="off">
+          <datalist id="watch-service-options">
+            <option value="Netflix"></option>
+            <option value="Prime Video"></option>
+            <option value="Apple TV+"></option>
+            <option value="Disney+"></option>
+            <option value="Max"></option>
+            <option value="Hulu"></option>
+            <option value="MUBI"></option>
+            <option value="The Criterion Channel"></option>
+            <option value="YouTube"></option>
+            <option value="Local cinema"></option>
+          </datalist>
+        </div>
+
+        <div class="field">
+          <div class="field-label-row">
+            <label for="watch-rating">Your rating</label>
+            <span>0 – 10</span>
+          </div>
+          <div class="wl-rating-edit">
+            <div class="input-group">
+              <input class="input has-suffix" type="number" id="watch-rating" min="0" max="10" step="0.1" placeholder="Unrated">
+              <span class="suffix">/ 10</span>
+            </div>
+            <div class="wl-quick-stars" id="watch-rating-stars" role="group" aria-label="Quick rating">
+              <button type="button" data-quick-rating="2" aria-label="Rate 2 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg></button>
+              <button type="button" data-quick-rating="4" aria-label="Rate 4 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg></button>
+              <button type="button" data-quick-rating="6" aria-label="Rate 6 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg></button>
+              <button type="button" data-quick-rating="8" aria-label="Rate 8 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg></button>
+              <button type="button" data-quick-rating="10" aria-label="Rate 10 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg></button>
+              <button type="button" class="wl-rating-clear" data-quick-rating="0" aria-label="Clear rating" hidden>Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <label class="wl-check">
+          <input type="checkbox" id="watch-favorite">
+          <span class="wl-check-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="m12 2.8 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3L2.8 9.5l6.4-.9z"/></svg>
+          </span>
+          <span>Mark this as a favorite</span>
+        </label>
+
+        <div class="field">
+          <label for="watch-note">A note to yourself</label>
+          <textarea class="textarea small" id="watch-note" placeholder="Why it is here, or what to remember."></textarea>
+        </div>
+        <p class="wl-form-footnote">Saved to your workspace.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn wl-dialog-delete left" id="watch-delete" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+          Remove
+        </button>
+        <button type="button" class="btn" data-close-dialog>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="watch-save">Add to shelf</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/watchlist.js"></script>
+</body>
+</html>

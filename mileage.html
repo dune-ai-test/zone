@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en" data-theme="light" class="mileage-root">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mileage — Zone</title>
+  <meta name="description" content="A local fuel ledger for the machines you drive: odometer chaining, live mileage, cost per kilometre, and a garage for every vehicle.">
+  <meta name="theme-color" content="#11100e">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/mileage.css">
+</head>
+<body data-page="mileage">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main mi-main" id="main">
+        <header class="page-head mi-head">
+          <div class="mi-head-copy">
+            <p class="eyebrow mi-eyebrow"><span class="mi-eyebrow-index">01</span>The fuel ledger</p>
+            <h1 class="mi-title">Every litre.<br><em>Every kilometre.</em></h1>
+            <p class="mi-lede">A fuel ledger for the machines you actually drive. Note the pump, carry the odometer forward, and see what every kilometre really costs.</p>
+
+            <div class="mi-head-actions">
+              <button type="button" class="mi-btn mi-btn-primary" id="focus-log">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Log a fill
+              </button>
+              <button type="button" class="mi-btn" data-open-vehicle>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h18"/><path d="m5 17 1-6 2-4h8l2 4 1 6"/><path d="M9 7h6"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                Add vehicle
+              </button>
+              <button type="button" class="mi-btn mi-btn-quiet" id="export-mileage">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export CSV
+              </button>
+              <button type="button" class="mi-btn mi-btn-quiet" id="open-mileage-data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="7.5" ry="3"/><path d="M4.5 5v6c0 1.65 3.36 3 7.5 3s7.5-1.35 7.5-3V5"/><path d="M4.5 11v6c0 1.65 3.36 3 7.5 3s7.5-1.35 7.5-3v-6"/></svg>
+                JSON backup
+              </button>
+            </div>
+
+            <div class="mi-head-meta">
+              <div class="mi-currency" id="currency-toggle" role="group" aria-label="Display currency">
+                <button type="button" class="mi-currency-btn is-active" data-currency="INR" aria-pressed="true">₹ INR</button>
+                <button type="button" class="mi-currency-btn" data-currency="USD" aria-pressed="false">$ USD</button>
+                <button type="button" class="mi-currency-btn" data-currency="EUR" aria-pressed="false">€ EUR</button>
+                <button type="button" class="mi-currency-btn" data-currency="GBP" aria-pressed="false">£ GBP</button>
+              </div>
+              <span class="mi-local"><i aria-hidden="true"></i>D1 synced · private to your workspace</span>
+            </div>
+          </div>
+
+          <div class="mi-head-gauge">
+            <section class="mi-gauge-card" id="gauge-card" aria-labelledby="gauge-title">
+              <div class="mi-instrument-top">
+                <p class="mi-kicker">Live instrument</p>
+                <span class="mi-gauge-coord" aria-hidden="true">KM / L · 0—40</span>
+              </div>
+
+              <div class="mi-gauge-head">
+                <h2 class="mi-gauge-title" id="gauge-title">Mileage meter</h2>
+                <span class="mi-live-badge" id="gauge-mode">Fleet average</span>
+              </div>
+
+              <div class="mi-gauge-stage">
+                <span class="mi-gauge-ruler" aria-hidden="true"></span>
+                <div class="mi-gauge-glow" aria-hidden="true"></div>
+                <svg class="mi-speedo" viewBox="0 0 320 250" role="img" aria-labelledby="gauge-title gauge-desc">
+                  <desc id="gauge-desc">Speedometer showing the live or lifetime average fuel economy in kilometres per litre.</desc>
+                  <defs>
+                    <linearGradient id="mi-arc-grad" x1="42" y1="208" x2="278" y2="208" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stop-color="#6f969e"></stop>
+                      <stop offset="0.44" stop-color="#92a88d"></stop>
+                      <stop offset="0.72" stop-color="#c9a164"></stop>
+                      <stop offset="1" stop-color="#ecd7ab"></stop>
+                    </linearGradient>
+                  </defs>
+                  <path class="mi-arc-track" d="M 73 207 A 100 100 0 1 1 247 207" pathLength="100"></path>
+                  <path class="mi-arc-value" id="gauge-arc" d="M 73 207 A 100 100 0 1 1 247 207" pathLength="100"></path>
+                  <g id="gauge-ticks" class="mi-ticks"></g>
+                  <g class="mi-needle" id="gauge-needle">
+                    <path class="mi-needle-glow" d="M160 82 L155 157 L165 157 Z"></path>
+                    <path class="mi-needle-body" d="M160 82 L155 157 L165 157 Z"></path>
+                  </g>
+                  <circle class="mi-hub-glow" cx="160" cy="157" r="14"></circle>
+                  <circle class="mi-hub" cx="160" cy="157" r="9"></circle>
+                  <circle class="mi-hub-pin" cx="160" cy="157" r="3.2"></circle>
+                </svg>
+                <div class="mi-readout" aria-live="polite">
+                  <span class="mi-readout-label" id="gauge-mode-label">Fleet average</span>
+                  <div class="mi-readout-value">
+                    <span class="mi-digit" id="calc-value">0.0</span>
+                    <span class="mi-readout-unit">km/l</span>
+                  </div>
+                  <span class="mi-readout-sub" id="gauge-sub">across every fill</span>
+                  <span class="mi-readout-delta" id="gauge-delta" hidden></span>
+                </div>
+              </div>
+
+              <div class="mi-breakdown">
+                <div class="mi-breakdown-cell">
+                  <span>Distance</span>
+                  <strong id="calc-distance">—</strong>
+                </div>
+                <div class="mi-breakdown-cell">
+                  <span>Fuel used</span>
+                  <strong id="calc-litres">—</strong>
+                </div>
+                <div class="mi-breakdown-cell">
+                  <span>Cost / km</span>
+                  <strong id="calc-cost">—</strong>
+                </div>
+              </div>
+              <div class="mi-gauge-foot">
+                <span class="mi-gauge-stamp" aria-hidden="true">Z / M</span>
+                <p class="mi-formula" id="calc-formula">Enter the readings to see the arithmetic.</p>
+              </div>
+            </section>
+          </div>
+        </header>
+
+        <section class="mi-pulse" aria-labelledby="pulse-title">
+          <div class="mi-pulse-head">
+            <p class="mi-kicker" id="pulse-title">Fleet pulse</p>
+            <p class="mi-pulse-meta" id="pulse-meta">All time · no fills yet</p>
+          </div>
+          <div class="mi-pulse-body">
+            <div class="mi-pulse-stats" id="fleet-stats"></div>
+            <div class="mi-latest" id="latest-fill"></div>
+          </div>
+        </section>
+
+        <div class="mi-console" id="pump">
+          <section class="mi-card mi-pump" aria-labelledby="pump-title">
+            <div class="mi-card-head">
+              <div>
+                <p class="mi-kicker">02 / The pump</p>
+                <h2 class="mi-card-title" id="pump-title">New fill-up</h2>
+                <p class="mi-card-sub">Three small readings. One clean link in the chain.</p>
+              </div>
+              <span class="mi-mode-label" id="calc-mode">Live calculation</span>
+            </div>
+
+            <form class="mi-form" id="mileage-form" novalidate>
+              <input type="hidden" id="trip-id">
+
+              <div class="mi-form-step">
+                <div class="mi-form-step-head">
+                  <span>01</span>
+                  <strong>Vehicle &amp; chain</strong>
+                  <small>Pick from the garage</small>
+                </div>
+
+                <div class="mi-field">
+                  <label for="trip-vehicle">Vehicle</label>
+                  <div class="mi-vehicle-input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h18"/><path d="m5 17 1-6 2-4h8l2 4 1 6"/><path d="M9 7h6"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                    <input class="mi-input" type="text" id="trip-vehicle" list="vehicle-options" placeholder="Start typing, or pick from the garage" autocomplete="off" maxlength="40" required aria-describedby="vehicle-hint">
+                    <button type="button" class="mi-inline-add" data-open-vehicle aria-label="Add a vehicle">+</button>
+                  </div>
+                  <datalist id="vehicle-options"></datalist>
+                  <div class="mi-quick-picker" id="vehicle-picker" role="group" aria-label="Pick a vehicle for this fill"></div>
+                  <p class="mi-hint" id="vehicle-hint">Pick a vehicle and its date-aware odometer chain comes with it.</p>
+                </div>
+
+                <div class="mi-chain" id="chain-strip" role="status" aria-live="polite">
+                  <div class="mi-chain-node">
+                    <span>Previous end</span>
+                    <strong id="chain-last">—</strong>
+                  </div>
+                  <div class="mi-chain-road" aria-hidden="true">
+                    <i></i><i></i><i></i><span></span>
+                  </div>
+                  <div class="mi-chain-node mi-chain-node-end">
+                    <span>New start</span>
+                    <strong id="chain-start">—</strong>
+                  </div>
+                  <p class="mi-chain-note" id="chain-note">Pick a vehicle to carry its odometer forward.</p>
+                  <button type="button" class="mi-chain-reset" id="chain-reset" hidden>Re-link</button>
+                </div>
+              </div>
+
+              <div class="mi-form-step">
+                <div class="mi-form-step-head">
+                  <span>02</span>
+                  <strong>At the pump</strong>
+                  <small>Date &amp; price</small>
+                </div>
+                <div class="mi-form-grid">
+                  <div class="mi-field">
+                    <label for="trip-date">Date</label>
+                    <input class="mi-input" type="date" id="trip-date" required>
+                  </div>
+                  <div class="mi-field">
+                    <label for="trip-price">Price / litre <span class="mi-field-note">at the pump</span></label>
+                    <div class="mi-input-affix">
+                      <input class="mi-input" type="number" id="trip-price" min="0" step="0.01" inputmode="decimal" placeholder="106.80" required>
+                      <span class="mi-affix" id="price-suffix">₹</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mi-form-step">
+                <div class="mi-form-step-head">
+                  <span>03</span>
+                  <strong>Readings &amp; spend</strong>
+                  <small>The full tank</small>
+                </div>
+                <div class="mi-form-grid">
+                  <div class="mi-field">
+                    <label for="trip-start">Start odometer</label>
+                    <div class="mi-input-affix">
+                      <input class="mi-input" type="number" id="trip-start" min="0" step="1" inputmode="numeric" placeholder="42310" required>
+                      <span class="mi-affix">km</span>
+                    </div>
+                  </div>
+                  <div class="mi-field">
+                    <label for="trip-end">End odometer</label>
+                    <div class="mi-input-affix">
+                      <input class="mi-input" type="number" id="trip-end" min="0" step="1" inputmode="numeric" placeholder="43115" required>
+                      <span class="mi-affix">km</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mi-form-grid">
+                  <div class="mi-field">
+                    <label for="trip-paid">Total paid</label>
+                    <div class="mi-input-affix">
+                      <input class="mi-input" type="number" id="trip-paid" min="0" step="0.01" inputmode="decimal" placeholder="3400" required>
+                      <span class="mi-affix" id="paid-suffix">₹</span>
+                    </div>
+                  </div>
+                  <div class="mi-field">
+                    <label for="trip-note">Note <span class="mi-field-note">optional</span></label>
+                    <input class="mi-input" type="text" id="trip-note" maxlength="90" placeholder="City traffic, highway run, airport…">
+                  </div>
+                </div>
+              </div>
+
+              <div class="mi-form-actions">
+                <button type="button" class="mi-btn mi-btn-quiet" id="cancel-trip" hidden>Cancel edit</button>
+                <button type="submit" class="mi-btn mi-btn-primary mi-save-btn" id="save-trip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                  Save fill
+                </button>
+              </div>
+              <p class="mi-form-note">Litres used = total paid ÷ price per litre. Cost per km uses the full fill. Pick an older date and the chain uses the fill before it; the next fill is re-linked on save.</p>
+            </form>
+          </section>
+
+          <aside class="mi-card mi-glance" aria-labelledby="glance-title">
+            <div class="mi-card-head">
+              <div>
+                <p class="mi-kicker">Fuel maths</p>
+                <h2 class="mi-card-title" id="glance-title">At a glance</h2>
+              </div>
+              <span class="mi-card-meta">all time</span>
+            </div>
+            <div class="mi-stats" id="mileage-stats"></div>
+            <div class="mi-glance-foot">
+              <p class="mi-glance-note">Only complete tanks count toward mileage. Distance and spend follow the whole logbook, so nothing you record disappears from the totals.</p>
+              <a class="mi-text-link" href="#logbook">Open the logbook <span aria-hidden="true">↘</span></a>
+            </div>
+          </aside>
+        </div>
+
+        <section class="mi-garage" aria-labelledby="garage-title">
+          <div class="mi-section-head">
+            <div>
+              <p class="mi-kicker">03 / The garage</p>
+              <h2 class="mi-section-title" id="garage-title">Vehicles on the road</h2>
+              <p class="mi-section-lede">Each machine keeps its own chain, average, and running costs.</p>
+            </div>
+            <div class="mi-section-tools">
+              <span class="mi-count" id="vehicle-count">0 vehicles</span>
+              <button type="button" class="mi-btn mi-btn-sm" data-open-vehicle>+ Add vehicle</button>
+            </div>
+          </div>
+          <div class="mi-vehicle-grid" id="vehicle-grid"></div>
+        </section>
+
+        <section class="mi-road-section" aria-labelledby="insights-title">
+          <div class="mi-chapter-head">
+            <div>
+              <p class="mi-kicker">04 / Reading the road</p>
+              <h2 class="mi-chapter-title" id="insights-title">The shape of your driving.</h2>
+            </div>
+            <p class="mi-chapter-note">Trends by tank, and the honest comparison between every vehicle in the garage.</p>
+          </div>
+
+          <div class="mi-insights">
+            <section class="mi-card mi-chart-card" aria-labelledby="trend-title">
+              <div class="mi-card-head">
+                <div>
+                  <p class="mi-kicker">Economy trend</p>
+                  <h2 class="mi-card-title" id="trend-title">Mileage over time</h2>
+                </div>
+                <select class="mi-select" id="chart-vehicle" aria-label="Vehicle shown in the mileage chart">
+                  <option value="all">All vehicles</option>
+                </select>
+              </div>
+              <div class="mi-chart-legend" id="chart-legend"></div>
+              <div class="mi-chart" id="mileage-chart"></div>
+            </section>
+
+            <section class="mi-card mi-compare-card" aria-labelledby="compare-title">
+              <div class="mi-card-head">
+                <div>
+                  <p class="mi-kicker">Vehicle comparison</p>
+                  <h2 class="mi-card-title" id="compare-title">By vehicle</h2>
+                </div>
+                <span class="mi-card-meta">average km/l</span>
+              </div>
+              <div class="mi-compare-list" id="mileage-compare"></div>
+              <p class="mi-compare-note">Higher is better. Averages count complete tanks only.</p>
+            </section>
+          </div>
+        </section>
+
+        <section class="mi-card mi-logbook" id="logbook" aria-labelledby="logbook-title">
+          <div class="mi-section-head mi-log-head">
+            <div>
+              <p class="mi-kicker">05 / The logbook</p>
+              <h2 class="mi-section-title" id="logbook-title">Every fill, in order</h2>
+              <p class="mi-section-lede">Search a note, sort a season, or correct a reading.</p>
+            </div>
+            <div class="mi-section-tools mi-log-tools">
+              <span class="mi-count" id="log-count">0 fills</span>
+              <label class="mi-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+                <input type="search" id="log-search" placeholder="Search fills" autocomplete="off" aria-label="Search fills by vehicle or note">
+              </label>
+              <select class="mi-select" id="log-sort" aria-label="Sort the logbook">
+                <option value="recent">Newest first</option>
+                <option value="mileage">Best mileage</option>
+                <option value="spend">Highest spend</option>
+              </select>
+              <select class="mi-select" id="vehicle-filter" aria-label="Filter the logbook by vehicle">
+                <option value="all">All vehicles</option>
+              </select>
+            </div>
+          </div>
+          <div class="mi-table-wrap">
+            <table class="mi-log-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Odometer chain</th>
+                  <th class="num">Distance</th>
+                  <th class="num">Fuel</th>
+                  <th class="num">Mileage</th>
+                  <th class="num">Cost / km</th>
+                  <th class="num">Paid</th>
+                  <th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="trips-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="site-foot mi-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · Mileage ledger · v1.3 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="mi-dialog" id="vehicle-dialog" aria-labelledby="vehicle-dialog-title">
+    <form class="mi-dialog-form" id="vehicle-form" novalidate>
+      <div class="mi-dialog-head">
+        <div>
+          <p class="mi-kicker">Garage entry</p>
+          <h2 id="vehicle-dialog-title">Add a vehicle</h2>
+        </div>
+        <button type="button" class="mi-dialog-close" data-close-vehicle aria-label="Close add vehicle dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="mi-dialog-body">
+        <div class="mi-field">
+          <label for="vehicle-name">Name</label>
+          <input class="mi-input" type="text" id="vehicle-name" maxlength="40" placeholder="Swift, Activa, the blue one…" required autocomplete="off">
+        </div>
+
+        <fieldset class="mi-fieldset">
+          <legend>Body type</legend>
+          <div class="mi-type-grid" id="vehicle-types">
+            <label class="mi-type-option">
+              <input type="radio" name="vehicle-type" value="bike">
+              <span class="mi-type-art" data-type="bike" aria-hidden="true"></span>
+              <span>Bike</span>
+            </label>
+            <label class="mi-type-option">
+              <input type="radio" name="vehicle-type" value="scooter">
+              <span class="mi-type-art" data-type="scooter" aria-hidden="true"></span>
+              <span>Scooter</span>
+            </label>
+            <label class="mi-type-option">
+              <input type="radio" name="vehicle-type" value="car" checked>
+              <span class="mi-type-art" data-type="car" aria-hidden="true"></span>
+              <span>Car</span>
+            </label>
+            <label class="mi-type-option">
+              <input type="radio" name="vehicle-type" value="suv">
+              <span class="mi-type-art" data-type="suv" aria-hidden="true"></span>
+              <span>SUV</span>
+            </label>
+            <label class="mi-type-option">
+              <input type="radio" name="vehicle-type" value="truck">
+              <span class="mi-type-art" data-type="truck" aria-hidden="true"></span>
+              <span>Truck</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="mi-fieldset">
+          <legend>Fuel</legend>
+          <div class="mi-fuel-row">
+            <label class="mi-fuel-option">
+              <input type="radio" name="vehicle-fuel" value="petrol" checked>
+              <span>Petrol</span>
+            </label>
+            <label class="mi-fuel-option">
+              <input type="radio" name="vehicle-fuel" value="diesel">
+              <span>Diesel</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <p class="mi-dialog-note">Every vehicle keeps its own odometer chain. Deleting a vehicle also removes its fills.</p>
+      </div>
+      <div class="mi-dialog-actions">
+        <button type="button" class="mi-btn mi-btn-quiet" data-close-vehicle>Cancel</button>
+        <button type="submit" class="mi-btn mi-btn-primary">Add to garage</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="mi-dialog mi-data-dialog" id="mileage-data-dialog" aria-labelledby="mileage-data-title">
+    <div class="mi-dialog-form">
+      <div class="mi-dialog-head">
+        <div>
+          <p class="mi-kicker">Portable ledger</p>
+          <h2 id="mileage-data-title">Backup &amp; restore</h2>
+        </div>
+        <button type="button" class="mi-dialog-close" data-close-mileage-data aria-label="Close backup dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="mi-dialog-body">
+        <div class="mi-data-summary" aria-label="Current Mileage data">
+          <div>
+            <span>Vehicles</span>
+            <strong id="data-vehicle-count">0</strong>
+          </div>
+          <div>
+            <span>Fills</span>
+            <strong id="data-fill-count">0</strong>
+          </div>
+          <div>
+            <span>Currency</span>
+            <strong id="data-currency-label">INR</strong>
+          </div>
+        </div>
+
+        <section class="mi-data-block" aria-labelledby="data-export-title">
+          <div class="mi-data-block-head">
+            <div>
+              <h3 id="data-export-title">Export a JSON backup</h3>
+              <p>Every vehicle, every fill, and the display currency in one portable file.</p>
+            </div>
+            <button type="button" class="mi-btn mi-btn-primary" id="export-mileage-json">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+              Download JSON
+            </button>
+          </div>
+        </section>
+
+        <section class="mi-data-block" aria-labelledby="data-import-title">
+          <div class="mi-data-block-head">
+            <div>
+              <h3 id="data-import-title">Restore from a JSON file</h3>
+              <p>Read the file first. Then merge it into this ledger or replace what is here.</p>
+            </div>
+            <label class="mi-btn mi-btn-quiet mi-file-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+              Choose JSON
+              <input class="mi-file-input" type="file" id="import-mileage-file" accept=".json,application/json">
+            </label>
+          </div>
+
+          <div class="mi-import-modes" role="radiogroup" aria-label="Import mode">
+            <label class="mi-import-mode">
+              <input type="radio" name="mileage-import-mode" value="merge" checked>
+              <span>
+                <strong>Merge</strong>
+                <small>Keep this ledger and add only records it does not have.</small>
+              </span>
+            </label>
+            <label class="mi-import-mode">
+              <input type="radio" name="mileage-import-mode" value="replace">
+              <span>
+                <strong>Replace</strong>
+                <small>Clear the Mileage ledger, then restore the file exactly.</small>
+              </span>
+            </label>
+          </div>
+
+          <p class="mi-import-status" id="mileage-import-status" role="status" aria-live="polite">No backup selected.</p>
+          <button type="button" class="mi-btn mi-btn-primary mi-apply-import" id="apply-mileage-import" hidden>Apply import</button>
+        </section>
+
+        <p class="mi-dialog-note">JSON files stay on this device unless you share them. IDs, dates, odometer readings, and notes are preserved. Merge keeps your current currency; Replace restores the file's currency.</p>
+      </div>
+
+      <div class="mi-dialog-actions">
+        <button type="button" class="mi-btn mi-btn-quiet" data-close-mileage-data>Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/mileage.js"></script>
+</body>
+</html>

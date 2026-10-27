@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Passbook — Zone</title>
+  <meta name="description" content="Every account in one running statement. A D1-backed passbook for deposits, withdrawals, and balances, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/passbook.css">
+</head>
+<body data-page="passbook">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main pk-page" id="main">
+        <header class="page-head pk-hero">
+          <div class="pk-hero-copy">
+            <p class="eyebrow">Money / Passbook</p>
+            <h1 class="page-title pk-title">Every account, <em>one statement.</em></h1>
+            <p class="page-sub pk-sub">The bank, the wallet, the savings pot. Record what goes in and what comes out, and keep the running balance honest without opening five different apps.</p>
+            <div class="pk-hero-actions">
+              <button type="button" class="btn pk-secondary" id="add-account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add account
+              </button>
+              <button type="button" class="btn btn-primary pk-primary" id="add-entry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add entry
+              </button>
+            </div>
+            <p class="pk-hero-meta" id="passbook-hero-meta"></p>
+          </div>
+
+          <aside class="pk-overview" aria-labelledby="passbook-overview-title">
+            <div class="pk-overview-head">
+              <span id="passbook-overview-title">Across every account</span>
+              <span id="passbook-hero-count">—</span>
+            </div>
+            <strong class="pk-overview-total" id="passbook-hero-total">—</strong>
+            <div class="pk-overview-split">
+              <div><span>In this month</span><strong id="passbook-hero-in">—</strong></div>
+              <div><span>Out this month</span><strong id="passbook-hero-out">—</strong></div>
+            </div>
+            <div class="pk-spark" id="passbook-hero-chart"></div>
+            <p class="pk-overview-note" id="passbook-hero-note">Balance at the end of each month.</p>
+          </aside>
+        </header>
+
+        <section class="pk-stats" id="passbook-stats" aria-label="Monthly passbook summary"></section>
+
+        <section class="pk-accounts-section" aria-labelledby="passbook-accounts-title">
+          <header class="pk-section-head">
+            <div>
+              <p class="pk-kicker">The book</p>
+              <h2 id="passbook-accounts-title">Accounts, side by side.</h2>
+            </div>
+            <span class="pk-section-meta">Select one to read its statement</span>
+          </header>
+          <div class="pk-accounts" id="account-row" aria-label="Accounts"></div>
+        </section>
+
+        <section class="panel pk-statement" aria-labelledby="statement-title">
+          <header class="pk-statement-head">
+            <div class="pk-statement-copy">
+              <p class="pk-kicker">Running statement</p>
+              <h2 class="pk-statement-title" id="statement-title">Statement</h2>
+              <p class="pk-statement-sub" id="statement-sub">—</p>
+            </div>
+            <div class="pk-statement-actions">
+              <button type="button" class="btn btn-sm pk-action-in" id="pb-deposit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+                Deposit
+              </button>
+              <button type="button" class="btn btn-sm pk-action-out" id="pb-withdraw">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+                Withdraw
+              </button>
+              <button type="button" class="icon-btn small pk-edit-account" id="pb-edit-account" aria-label="Edit account" title="Edit account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+              <button type="button" class="btn btn-sm pk-export" id="pb-export">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                CSV
+              </button>
+            </div>
+          </header>
+
+          <div class="pk-statement-top">
+            <div class="pk-balance">
+              <span>Current balance</span>
+              <strong id="statement-balance">—</strong>
+              <small id="statement-balance-note">—</small>
+            </div>
+            <div class="pk-summary" id="pb-summary"></div>
+          </div>
+
+          <div class="pk-statement-toolbar">
+            <div class="pk-toolbar-group">
+              <label class="pk-select-wrap">
+                <span class="sr-only">Filter by month</span>
+                <select class="select pk-select" id="pb-month"></select>
+              </label>
+              <label class="pk-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <span class="sr-only">Search entries</span>
+                <input type="search" id="pb-search" placeholder="Search entries…" aria-label="Search entries" aria-keyshortcuts="/">
+                <button type="button" class="pk-search-clear" id="pb-search-clear" aria-label="Clear search" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              </label>
+              <div class="pk-segmented" id="pb-type" role="group" aria-label="Filter by entry type">
+                <button type="button" class="active" data-entry-filter="all" aria-pressed="true">All</button>
+                <button type="button" data-entry-filter="deposit" aria-pressed="false">In</button>
+                <button type="button" data-entry-filter="withdraw" aria-pressed="false">Out</button>
+              </div>
+            </div>
+            <span class="pk-count" id="pb-count">—</span>
+          </div>
+
+          <div class="pk-table-wrap">
+            <table class="pk-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Details</th>
+                  <th>Account</th>
+                  <th class="num">In</th>
+                  <th class="num">Out</th>
+                  <th class="num">Balance</th>
+                  <th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="pb-body"></tbody>
+            </table>
+          </div>
+
+          <footer class="pk-statement-foot">
+            <span>Running balances are read in date order, not by what is filtered above.</span>
+            <span><span class="pk-key">N</span> new entry · <span class="pk-key">/</span> search</span>
+          </footer>
+        </section>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog pk-dialog" id="account-dialog">
+    <form method="dialog" id="account-form" novalidate>
+      <input type="hidden" id="account-id">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="account-kicker">A place for money</p>
+          <h2 class="dialog-title" id="account-title">Add an account</h2>
+        </div>
+        <button type="button" class="icon-btn small" data-close-account aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body pk-dialog-body">
+        <div class="field">
+          <label for="account-name">Account name</label>
+          <input class="input" type="text" id="account-name" maxlength="40" placeholder="HDFC Savings, Cash, the travel pot…" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="account-type">Type</label>
+            <select class="select" id="account-type">
+              <option>Bank</option>
+              <option>Savings</option>
+              <option>Wallet</option>
+              <option>Card</option>
+              <option>Cash</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="account-number">Number or note</label>
+            <input class="input" type="text" id="account-number" maxlength="30" placeholder="•••• 4821">
+          </div>
+        </div>
+        <div class="field">
+          <label for="account-opening">Opening balance</label>
+          <div class="input-group">
+            <span class="prefix" id="account-currency">₹</span>
+            <input class="input" type="number" id="account-opening" step="0.01" inputmode="decimal" placeholder="0">
+          </div>
+          <p class="field-hint">The balance before any entries in this account.</p>
+        </div>
+        <p class="pk-dialog-note">An account is just a place to keep the running total. You can rename it or close it later.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn btn-danger" id="account-delete" hidden>Delete account</button>
+        <span style="flex:1"></span>
+        <button type="button" class="btn" data-close-account>Cancel</button>
+        <button type="submit" class="btn btn-primary pk-save" id="account-save">Add account</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog pk-dialog" id="entry-dialog">
+    <form method="dialog" id="entry-form" novalidate>
+      <input type="hidden" id="entry-id">
+      <input type="hidden" id="entry-type" value="deposit">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="entry-kicker">A line in the book</p>
+          <h2 class="dialog-title" id="entry-title">Add an entry</h2>
+        </div>
+        <button type="button" class="icon-btn small" data-close-entry aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body pk-dialog-body">
+        <div class="field">
+          <span class="field-label">Direction</span>
+          <div class="segmented full pk-entry-types" id="entry-types" role="group" aria-label="Entry type">
+            <button type="button" class="active" data-entry-type="deposit" aria-pressed="true">Deposit</button>
+            <button type="button" data-entry-type="withdraw" aria-pressed="false">Withdrawal</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="entry-amount">Amount</label>
+          <div class="input-group pk-amount-group">
+            <span class="prefix" id="entry-currency">₹</span>
+            <input class="input" type="number" id="entry-amount" min="0" step="0.01" inputmode="decimal" placeholder="0" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="entry-date">Date</label>
+            <input class="input" type="date" id="entry-date" required>
+          </div>
+          <div class="field">
+            <label for="entry-account">Account</label>
+            <select class="select" id="entry-account" required></select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="entry-category">Category</label>
+            <select class="select" id="entry-category"></select>
+          </div>
+          <div class="field">
+            <label for="entry-description">Description</label>
+            <input class="input" type="text" id="entry-description" maxlength="80" placeholder="Salary, rent, coffee…" required>
+          </div>
+        </div>
+        <p class="pk-dialog-note">A deposit adds to the balance. A withdrawal takes away. The running total updates in date order.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-entry>Cancel</button>
+        <button type="submit" class="btn btn-primary pk-save" id="entry-save">Save entry</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/passbook.js"></script>
+</body>
+</html>

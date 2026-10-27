@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Money — Zone</title>
+  <meta name="description" content="Income, expenses, and the shape of a month. A D1-backed money tracker, part of Zone.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/money.css">
+</head>
+<body data-page="money">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main my-page" id="main">
+        <header class="page-head my-hero">
+          <div class="my-hero-copy">
+            <p class="eyebrow">Money / Ledger</p>
+            <h1 class="page-title my-title">Where the month <em>actually goes.</em></h1>
+            <p class="page-sub my-sub">Income and expenses, read against the budget. Not every rupee needs a category — but a month is easier to understand when they have one.</p>
+            <div class="my-hero-actions">
+              <button type="button" class="btn btn-primary my-primary" id="add-txn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Add transaction
+              </button>
+              <button type="button" class="btn my-secondary" data-edit-budget>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v12H3zM16 13h2"/><path d="M3 7l3-3h12l3 3"/></svg>
+                Adjust budget
+              </button>
+            </div>
+            <p class="my-hero-meta" id="money-hero-meta"></p>
+          </div>
+
+          <aside class="my-month-card" aria-labelledby="money-month-title">
+            <div class="my-month-top">
+              <div class="my-month-picker">
+                <span id="money-month-title">Month statement</span>
+                <input type="month" id="money-month" aria-label="Selected month">
+              </div>
+              <div class="my-month-nav" aria-label="Browse months">
+                <button type="button" id="money-prev-month" aria-label="Previous month" title="Previous month">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button type="button" id="money-next-month" aria-label="Next month" title="Next month">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="my-month-net">
+              <span>Kept this month</span>
+              <strong id="money-hero-net">—</strong>
+              <small id="money-hero-status">The month is still open.</small>
+            </div>
+
+            <div class="my-month-split">
+              <div><span>In</span><strong id="money-hero-income">—</strong></div>
+              <div><span>Out</span><strong id="money-hero-spent">—</strong></div>
+            </div>
+
+            <div class="my-month-budget">
+              <div class="my-month-budget-label"><span>Budget used</span><span id="money-hero-budget-meta">—</span></div>
+              <div class="my-month-budget-bar" aria-hidden="true"><i id="money-hero-budget-fill"></i></div>
+            </div>
+
+            <button type="button" class="my-this-month" id="money-this-month" hidden>Return to this month</button>
+            <span class="my-month-watermark" aria-hidden="true">₹</span>
+          </aside>
+        </header>
+
+        <section class="my-stats" id="money-stats" aria-label="Monthly money summary"></section>
+
+        <div class="my-layout">
+          <div class="my-main">
+            <section class="panel my-flow" aria-labelledby="money-flow-title">
+              <header class="my-panel-head">
+                <div>
+                  <p class="my-kicker">Cash flow</p>
+                  <h2 id="money-flow-title">The last six months.</h2>
+                </div>
+                <div class="my-chart-legend">
+                  <span><i class="is-income" aria-hidden="true"></i>Income</span>
+                  <span><i class="is-expense" aria-hidden="true"></i>Expenses</span>
+                </div>
+              </header>
+              <div class="my-chart" id="money-chart"></div>
+              <p class="my-chart-note">Select a month to open its statement. Bars show income and expenses only.</p>
+            </section>
+
+            <section class="panel my-ledger" aria-labelledby="money-ledger-title">
+              <header class="my-ledger-head">
+                <div>
+                  <p class="my-kicker">The ledger</p>
+                  <h2 id="money-ledger-title">Every entry, in order.</h2>
+                </div>
+                <span class="my-ledger-meta"><span id="money-ledger-month">—</span><span id="money-count">—</span></span>
+              </header>
+
+              <div class="my-tools">
+                <label class="my-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <span class="sr-only">Search transactions</span>
+                  <input type="search" id="money-search" placeholder="Search the ledger…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+                  <button type="button" class="my-search-clear" id="money-search-clear" aria-label="Clear search" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                  <kbd aria-hidden="true">/</kbd>
+                </label>
+                <label class="my-select-wrap">
+                  <span class="sr-only">Filter by category</span>
+                  <select class="select my-select" id="money-category">
+                    <option value="all">All categories</option>
+                  </select>
+                </label>
+                <div class="my-type-filter" id="money-type-filter" role="group" aria-label="Transaction type"></div>
+                <button type="button" class="btn btn-sm my-export" id="export-money">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                  CSV
+                </button>
+              </div>
+
+              <div class="my-table-wrap">
+                <table class="my-table">
+                  <thead>
+                    <tr>
+                      <th>Entry</th>
+                      <th>Category</th>
+                      <th class="num">Amount</th>
+                      <th><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="money-body"></tbody>
+                </table>
+              </div>
+
+              <footer class="my-ledger-foot">
+                <span>Amounts are recorded once; editing changes the entry itself.</span>
+                <span><span class="my-key">N</span> new entry · <span class="my-key">/</span> search</span>
+              </footer>
+            </section>
+          </div>
+
+          <aside class="my-rail" aria-label="Budget and reading">
+            <section class="panel my-budget" aria-labelledby="money-budget-title">
+              <header class="my-panel-head">
+                <div>
+                  <p class="my-kicker">The envelope</p>
+                  <h2 id="money-budget-title">Monthly budget.</h2>
+                </div>
+                <button type="button" class="my-text-btn" id="money-budget-edit">Adjust</button>
+              </header>
+              <div class="my-budget-figure">
+                <span>Set aside</span>
+                <strong id="money-budget-total">—</strong>
+              </div>
+              <div class="my-budget-bar" aria-hidden="true"><i id="money-budget-fill"></i></div>
+              <div class="my-budget-row"><span id="money-budget-pct">—</span><span id="money-budget-left">—</span></div>
+              <p class="my-budget-pace" id="money-budget-pace">Set a monthly envelope to read the pace of spending.</p>
+            </section>
+
+            <section class="panel my-donut-panel" aria-labelledby="money-donut-title">
+              <header class="my-panel-head">
+                <div>
+                  <p class="my-kicker">The shape of spending</p>
+                  <h2 id="money-donut-title">Where it went.</h2>
+                </div>
+                <span class="my-panel-meta" id="donut-month">—</span>
+              </header>
+              <div class="my-donut-layout" id="money-donut"></div>
+            </section>
+
+            <section class="panel my-reading" aria-labelledby="money-reading-title">
+              <header class="my-panel-head">
+                <div>
+                  <p class="my-kicker">Reading the month</p>
+                  <h2 id="money-reading-title">A few notes.</h2>
+                </div>
+              </header>
+              <div class="my-summary" id="money-summary"></div>
+            </section>
+          </aside>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="dialog my-dialog" id="txn-dialog">
+    <form method="dialog" id="txn-form" novalidate>
+      <input type="hidden" id="txn-id">
+      <input type="hidden" id="txn-type" value="expense">
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker" id="txn-kicker">Add to the ledger</p>
+          <h2 class="dialog-title" id="txn-title">A transaction</h2>
+        </div>
+        <button type="button" class="icon-btn small" data-close-txn aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body my-dialog-body">
+        <div class="field">
+          <span class="field-label">Type</span>
+          <div class="segmented full my-segmented" id="txn-types" role="group" aria-label="Transaction type">
+            <button type="button" class="active" data-type="expense" aria-pressed="true">Expense</button>
+            <button type="button" data-type="income" aria-pressed="false">Income</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="txn-amount">Amount</label>
+          <div class="input-group my-amount-group">
+            <span class="prefix" id="txn-currency">₹</span>
+            <input class="input" type="number" id="txn-amount" min="0" step="0.01" inputmode="decimal" placeholder="0" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="txn-date">Date</label>
+            <input class="input" type="date" id="txn-date" required>
+          </div>
+          <div class="field">
+            <label for="txn-category">Category</label>
+            <select class="select" id="txn-category"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="txn-note">Note</label>
+          <input class="input" type="text" id="txn-note" maxlength="90" placeholder="What was it for?">
+        </div>
+        <p class="my-dialog-note">One entry, one date. If it spans the month, split it into two.</p>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-txn>Cancel</button>
+        <button type="submit" class="btn btn-primary my-save" id="txn-save">Save transaction</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog small my-dialog" id="budget-dialog">
+    <form method="dialog" id="budget-form" novalidate>
+      <div class="dialog-head">
+        <div>
+          <p class="dialog-kicker">The envelope</p>
+          <h2 class="dialog-title">Monthly budget</h2>
+          <p class="dialog-sub">One number to hold the month against. You can change it whenever you like.</p>
+        </div>
+        <button type="button" class="icon-btn small" data-close-budget aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="field">
+          <label for="budget-amount">Budget for a month</label>
+          <div class="input-group">
+            <span class="prefix" id="budget-currency">₹</span>
+            <input class="input" type="number" id="budget-amount" min="0" step="100" inputmode="numeric" required>
+          </div>
+          <p class="field-hint">Applies to every month. Spending is tracked separately.</p>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button type="button" class="btn" data-close-budget>Cancel</button>
+        <button type="submit" class="btn btn-primary my-save">Set budget</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/money.js"></script>
+</body>
+</html>

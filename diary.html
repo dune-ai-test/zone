@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diary — Zone</title>
+  <meta name="description" content="A daily record of what happened, and what it meant. Part of Zone, a D1-backed set of personal utilities.">
+  <meta name="theme-color" content="#f3f0e8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem("zone.v1.settings") || "{}");
+        var t = s.theme || "system";
+        var d = t === "system" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : t;
+        document.documentElement.setAttribute("data-theme", d);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/pages.css">
+  <link rel="stylesheet" href="assets/css/experience.css">
+  <link rel="stylesheet" href="assets/css/diary.css">
+</head>
+<body data-page="diary">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="sidebar-backdrop" data-nav-close></div>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="workspace">
+      <header class="topbar" id="topbar"></header>
+      <main class="main dy-page" id="main">
+        <header class="page-head dy-hero">
+          <div class="dy-hero-copy">
+            <p class="eyebrow">Personal / Diary</p>
+            <h1 class="page-title dy-title"><span>The days,</span><em>kept close.</em></h1>
+            <p class="page-sub dy-sub">A record of what happened, who was there, and what it meant. One page is enough to hold a whole afternoon.</p>
+            <div class="dy-hero-actions">
+              <button type="button" class="btn btn-primary dy-primary" id="new-entry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Write an entry
+              </button>
+              <button type="button" class="btn dy-export" id="diary-export">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+                Export journal
+              </button>
+            </div>
+            <p class="dy-hero-meta" id="diary-hero-meta"></p>
+          </div>
+
+          <aside class="dy-today" id="diary-today" aria-label="Today's diary page"></aside>
+        </header>
+
+        <section class="dy-metrics" id="diary-stats" aria-label="Diary at a glance"></section>
+
+        <div class="dy-layout">
+          <section class="dy-journal" aria-labelledby="diary-journal-title">
+            <header class="dy-journal-head">
+              <div>
+                <p class="dy-kicker">The journal</p>
+                <h2 class="dy-section-title" id="diary-journal-title">All entries</h2>
+              </div>
+              <p class="dy-count" id="diary-count" aria-live="polite"></p>
+            </header>
+
+            <div class="dy-tools">
+              <div class="dy-search">
+                <svg class="dy-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <label class="sr-only" for="diary-search">Search diary entries</label>
+                <input type="search" id="diary-search" placeholder="Search the journal…" autocomplete="off" spellcheck="false" aria-keyshortcuts="/">
+                <button type="button" class="dy-search-clear" id="diary-search-clear" aria-label="Clear search" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+                <span class="dy-search-key" aria-hidden="true">/</span>
+              </div>
+
+              <label class="dy-sort">
+                <span class="sr-only">Sort entries</span>
+                <select class="select dy-select" id="diary-sort">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                </select>
+              </label>
+
+              <div class="dy-mood-tabs" id="diary-mood-filter" role="group" aria-label="Filter entries by mood"></div>
+            </div>
+
+            <div class="dy-filter-note" id="diary-filter-note" hidden></div>
+            <div id="entries" class="dy-timeline"></div>
+          </section>
+
+          <aside class="dy-rail" aria-label="Writing desk and calendar">
+            <section class="dy-desk" aria-labelledby="diary-desk-title">
+              <header class="dy-desk-head">
+                <div>
+                  <p class="dy-kicker">Writing desk</p>
+                  <h2 class="dy-desk-title" id="diary-desk-title">Make a note of it.</h2>
+                </div>
+                <span class="dy-mode" id="composer-mode">New entry</span>
+              </header>
+
+              <form id="diary-form" class="dy-form" novalidate>
+                <input type="hidden" id="entry-id">
+                <input type="hidden" id="entry-mood" value="good">
+
+                <div class="dy-field">
+                  <label for="entry-date">The day</label>
+                  <input class="input dy-input" type="date" id="entry-date" required>
+                </div>
+
+                <div class="dy-field">
+                  <span class="dy-field-label">The weather</span>
+                  <div class="dy-mood-picker" id="mood-picker" role="group" aria-label="Mood">
+                    <button type="button" class="dy-mood-option" data-mood="low" aria-pressed="false"><span class="dy-mood-dot" style="--mood:#9a6755"></span>Low</button>
+                    <button type="button" class="dy-mood-option" data-mood="flat" aria-pressed="false"><span class="dy-mood-dot" style="--mood:#8b8b80"></span>Flat</button>
+                    <button type="button" class="dy-mood-option active" data-mood="good" aria-pressed="true"><span class="dy-mood-dot" style="--mood:#6b8468"></span>Good</button>
+                    <button type="button" class="dy-mood-option" data-mood="bright" aria-pressed="false"><span class="dy-mood-dot" style="--mood:#c09a49"></span>Bright</button>
+                    <button type="button" class="dy-mood-option" data-mood="peak" aria-pressed="false"><span class="dy-mood-dot" style="--mood:#d8431c"></span>Peak</button>
+                  </div>
+                </div>
+
+                <div class="dy-field">
+                  <label for="entry-title">Title</label>
+                  <input class="input dy-input dy-title-input" type="text" id="entry-title" placeholder="Give the day a name" maxlength="90" required>
+                </div>
+
+                <div class="dy-field">
+                  <div class="dy-label-row">
+                    <label for="entry-body">Entry</label>
+                    <span class="dy-writing-meta"><span id="word-count">0 words</span><span aria-hidden="true">·</span><span id="reading-time">—</span></span>
+                  </div>
+                  <textarea class="textarea dy-body" id="entry-body" placeholder="What happened? What stayed with you?" required></textarea>
+                </div>
+
+                <div class="dy-prompt" id="diary-prompt">
+                  <div class="dy-prompt-head">
+                    <span class="dy-prompt-kicker">A place to start</span>
+                    <button type="button" class="dy-prompt-shuffle" id="diary-shuffle-prompt">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                      Another
+                    </button>
+                  </div>
+                  <p id="diary-prompt-text"></p>
+                </div>
+
+                <div class="dy-field">
+                  <label for="entry-tags">Threads</label>
+                  <input class="input dy-input" type="text" id="entry-tags" placeholder="work, home, reading">
+                  <p class="dy-field-hint">Separate with commas. A few are enough.</p>
+                </div>
+
+                <div class="dy-form-actions">
+                  <button type="button" class="btn btn-ghost" id="cancel-edit" hidden>Cancel</button>
+                  <button type="submit" class="btn btn-primary dy-save" id="save-entry">Save entry</button>
+                </div>
+                <p class="dy-form-note">Ctrl or ⌘ + Enter saves. Everything saves to your workspace.</p>
+              </form>
+            </section>
+
+            <section class="dy-calendar-panel" aria-labelledby="diary-calendar-title">
+              <header class="dy-calendar-head">
+                <div>
+                  <p class="dy-kicker">Five weeks</p>
+                  <h2 id="diary-calendar-title">The month, in colour.</h2>
+                </div>
+                <span class="dy-calendar-key"><i aria-hidden="true"></i>Today</span>
+              </header>
+              <div class="dy-calendar-weekdays" aria-hidden="true">
+                <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+              </div>
+              <div class="dy-calendar" id="diary-calendar"></div>
+              <div class="dy-calendar-meta">
+                <span id="fortnight-range">—</span>
+                <span id="fortnight-meta">—</span>
+              </div>
+              <button type="button" class="dy-calendar-clear" id="diary-calendar-clear" hidden>Show the whole journal</button>
+            </section>
+          </aside>
+        </div>
+
+        <footer class="site-foot">
+          <span>Zone — synced through Cloudflare D1</span>
+          <span><a href="settings.html">Settings</a> · v2.0 · 2026</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="assets/js/cloud.js"></script>
+  <script src="assets/js/core.js"></script>
+  <script src="assets/js/pages/diary.js"></script>
+</body>
+</html>
