@@ -426,7 +426,7 @@ fun SubscriptionFormScreen(
             item {
                 MonoLabel("Cycle")
                 Spacer(Modifier.height(6.dp))
-                ZoneSegmented(listOf("Monthly", "Yearly", "Weekly"), cycle) { cycle = it }
+                ZoneSegmented(listOf("Monthly", "Yearly", "Weekly"), cycle, onSelect = { cycle = it })
             }
             item { Spacer(Modifier.height(14.dp)) }
             item { ZoneDateField(next, { next = it }, "Next charge") }
@@ -436,7 +436,7 @@ fun SubscriptionFormScreen(
             item {
                 MonoLabel("Status")
                 Spacer(Modifier.height(6.dp))
-                ZoneSegmented(listOf("Active", "Paused"), status) { status = it }
+                ZoneSegmented(listOf("Active", "Paused"), status, onSelect = { status = it })
                 Spacer(Modifier.height(5.dp))
                 Text(
                     "Paused plans stay on the shelf, but not in the burn.",

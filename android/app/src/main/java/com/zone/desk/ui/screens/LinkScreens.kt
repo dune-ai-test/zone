@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material.icons.outlined.X
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -511,7 +511,7 @@ fun LinkFormScreen(
                             ) {
                                 Text("#$tag", style = ZoneType.monoSmall, color = ZoneTheme.colors.accent)
                                 Spacer(Modifier.width(5.dp))
-                                Icon(Icons.Outlined.X, contentDescription = "Remove tag", tint = ZoneTheme.colors.accent, modifier = Modifier.size(10.dp))
+                                Icon(Icons.Outlined.Close, contentDescription = "Remove tag", tint = ZoneTheme.colors.accent, modifier = Modifier.size(10.dp))
                             }
                         }
                     }

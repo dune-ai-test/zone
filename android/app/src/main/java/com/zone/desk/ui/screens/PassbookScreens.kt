@@ -61,6 +61,7 @@ import com.zone.desk.ui.components.ZoneDetailScaffold
 import com.zone.desk.ui.components.ZoneEditorScaffold
 import com.zone.desk.ui.components.ZoneEmptyState
 import com.zone.desk.ui.components.ZoneField
+import com.zone.desk.ui.components.ZoneGhostButton
 import com.zone.desk.ui.components.ZonePicker
 import com.zone.desk.ui.components.ZoneSegmented
 import com.zone.desk.ui.components.ZoneStat
@@ -316,9 +317,9 @@ fun PassbookAddScreen(
                 Spacer(Modifier.height(8.dp))
                 Text("Add an entry.", style = ZoneType.displaySmall, color = ZoneTheme.colors.ink)
                 Spacer(Modifier.height(14.dp))
-                ZoneSegmented(listOf("Withdrawal", "Deposit"), if (type == "deposit") "Deposit" else "Withdrawal") {
+                ZoneSegmented(listOf("Withdrawal", "Deposit"), if (type == "deposit") "Deposit" else "Withdrawal", onSelect = {
                     type = if (it == "Deposit") "deposit" else "withdraw"
-                }
+                })
             }
             item { Spacer(Modifier.height(16.dp)) }
             item {

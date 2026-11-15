@@ -69,8 +69,10 @@ import com.zone.desk.ui.components.ZoneGhostButton
 import com.zone.desk.ui.components.ZoneNavRow
 import com.zone.desk.ui.components.ZonePicker
 import com.zone.desk.ui.components.ZoneProgress
+import com.zone.desk.ui.components.ZoneRootHeader
 import com.zone.desk.ui.components.ZoneSegmented
 import com.zone.desk.ui.components.ZoneStat
+import com.zone.desk.ui.components.ZoneTabScaffold
 import com.zone.desk.ui.components.ZoneTextDialog
 import com.zone.desk.ui.navigation.Routes
 import com.zone.desk.ui.theme.ZoneType
@@ -557,9 +559,9 @@ fun TxnEditorScreen(
                     color = ZoneTheme.colors.ink
                 )
                 Spacer(Modifier.height(14.dp))
-                ZoneSegmented(listOf("Expense", "Income"), if (type == "income") "Income" else "Expense") {
+                ZoneSegmented(listOf("Expense", "Income"), if (type == "income") "Income" else "Expense", onSelect = {
                     type = if (it == "Income") "income" else "expense"
-                }
+                })
             }
             item { Spacer(Modifier.height(16.dp)) }
             item {

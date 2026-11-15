@@ -374,12 +374,12 @@ fun WatchFormScreen(
             item {
                 MonoLabel("Format")
                 Spacer(Modifier.height(6.dp))
-                ZoneSegmented(listOf("Film", "Series"), type) { picked ->
+                ZoneSegmented(listOf("Film", "Series"), type, onSelect = { picked ->
                     type = picked
                     if (picked == "Series" && seasons.isEmpty()) {
                         seasons = listOf(Season(number = 1, episodes = 0, watched = 0))
                     }
-                }
+                })
             }
             item { Spacer(Modifier.height(14.dp)) }
             item {

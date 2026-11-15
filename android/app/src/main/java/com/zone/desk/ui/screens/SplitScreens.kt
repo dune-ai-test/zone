@@ -55,6 +55,7 @@ import com.zone.desk.ui.components.CheckCircle
 import com.zone.desk.ui.components.MonoLabel
 import com.zone.desk.ui.components.Rule
 import com.zone.desk.ui.components.SectionLabel
+import com.zone.desk.ui.components.ZoneAreaField
 import com.zone.desk.ui.components.ZoneAvatar
 import com.zone.desk.ui.components.ZoneButton
 import com.zone.desk.ui.components.ZoneCard

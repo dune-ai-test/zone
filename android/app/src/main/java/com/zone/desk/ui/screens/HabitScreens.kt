@@ -54,6 +54,7 @@ import com.zone.desk.ui.components.SectionLabel
 import com.zone.desk.ui.components.ZoneBars
 import com.zone.desk.ui.components.ZoneButton
 import com.zone.desk.ui.components.ZoneCard
+import com.zone.desk.ui.components.ZoneChip
 import com.zone.desk.ui.components.ZoneConfirmDialog
 import com.zone.desk.ui.components.ZoneDetailScaffold
 import com.zone.desk.ui.components.ZoneEditorScaffold
@@ -661,7 +662,7 @@ private fun HabitEditDialog(habit: Habit, onDismiss: () -> Unit, onSave: (Habit)
             Spacer(Modifier.height(14.dp))
             MonoLabel("Days per week")
             Spacer(Modifier.height(6.dp))
-            ZoneSegmented((1..7).map { it.toString() }, target.toString()) { target = it.toIntOrNull() ?: 7 }
+            ZoneSegmented((1..7).map { it.toString() }, target.toString(), onSelect = { target = it.toIntOrNull() ?: 7 })
             Spacer(Modifier.height(18.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Text(

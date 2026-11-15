@@ -427,9 +427,9 @@ fun DiaryEditorScreen(
             item {
                 MonoLabel("The weather")
                 Spacer(Modifier.height(7.dp))
-                ZoneSegmented(moods, mood.replaceFirstChar { it.uppercase() }) { picked ->
+                ZoneSegmented(moods, mood.replaceFirstChar { it.uppercase() }, onSelect = { picked ->
                     mood = picked.lowercase()
-                }
+                })
             }
             item { Spacer(Modifier.height(16.dp)) }
             item {
